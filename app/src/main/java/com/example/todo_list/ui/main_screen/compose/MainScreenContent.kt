@@ -2,6 +2,7 @@ package com.example.todo_list.ui.main_screen.compose
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -30,25 +32,13 @@ import androidx.compose.ui.unit.dp
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainScreenContent(modifier: Modifier = Modifier) {
-  val taskList = remember {
-    mutableStateListOf(
-      TodoTask(name = "task1"),
-      TodoTask(name = "task2"),
-      TodoTask(name = "task3")
-    )
-  }
-
-  val onItemClick: (Int) -> Unit = remember {
-    { index ->
-      with(taskList[index]) {
-        taskList[index] = copy(isCompleted = !isCompleted)
-      }
-    }
-  }
-
+fun MainScreenContent(
+  modifier: Modifier = Modifier,
+  taskList: SnapshotStateList<TodoTask> = mutableStateListOf(),
+  onItemClick: (Int) -> Unit = {}
+) {
   Scaffold(
     modifier = modifier
       .fillMaxSize()
@@ -70,8 +60,12 @@ fun MainScreenContent(modifier: Modifier = Modifier) {
     }
   ) { innerPadding ->
     LazyColumn(contentPadding = innerPadding) {
-      itemsIndexed(taskList) { index, item ->
+      itemsIndexed(
+        items = taskList,
+        key = { index, _ -> index }
+      ) { index, item ->
         TodoListItem(
+          modifier = Modifier.animateItemPlacement(),
           taskNumber = index + 1,
           taskName = item.name,
           isCompleted = item.isCompleted,
@@ -133,19 +127,29 @@ fun TodoListItem(
   }
 }
 
+// region preview
+
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun MainScreenContentPreview() {
+private fun MainScreenContentPreview() {
   ToDoListTheme {
-    MainScreenContent()
+    MainScreenContent(
+      taskList = remember {
+        mutableStateListOf(
+          TodoTask(name = "task1"),
+          TodoTask(name = "task2"),
+          TodoTask(name = "task3")
+        )
+      }
+    )
   }
 }
 
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, backgroundColor = 0x000000)
 @Composable
-fun TodoListItemPreview() {
+private fun TodoListItemPreview() {
   ToDoListTheme {
     TodoListItem(taskNumber = 1, taskName = "Some task", isCompleted = false, onClick = {})
   }
@@ -155,7 +159,7 @@ fun TodoListItemPreview() {
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, backgroundColor = 0x000000)
 @Composable
-fun TodoListItemCompletedPreview() {
+private fun TodoListItemCompletedPreview() {
   ToDoListTheme {
     TodoListItem(
       taskNumber = 1,
@@ -165,3 +169,5 @@ fun TodoListItemCompletedPreview() {
     )
   }
 }
+
+// endregion

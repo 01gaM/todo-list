@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import com.example.todo_list.ui.main_screen.compose.MainScreenContent
+import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
 
 class MainActivity : ComponentActivity() {
@@ -12,8 +15,25 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
+      val taskList = remember {
+        mutableStateListOf(
+          TodoTask(name = "task1"),
+          TodoTask(name = "task2"),
+          TodoTask(name = "task3")
+        )
+      }
+
+      val onItemClick: (Int) -> Unit = { index ->
+        with(taskList[index]) {
+          taskList[index] = copy(isCompleted = !isCompleted)
+        }
+      }
+
       ToDoListTheme {
-        MainScreenContent()
+        MainScreenContent(
+          taskList = taskList,
+          onItemClick = onItemClick
+        )
       }
     }
   }
