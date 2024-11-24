@@ -50,6 +50,7 @@ import com.example.todo_list.R
 import com.example.todo_list.ui.composables.SwipeToDeleteContainer
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -178,6 +179,13 @@ fun TodoListItem(
   isCompleted: Boolean,
   onClick: () -> Unit
 ) {
+  val capitalizedName = remember(taskName) {
+    taskName.replaceFirstChar {
+      if (it.isLowerCase()) it.titlecase(Locale.getDefault())
+      else it.toString()
+    }
+  }
+
   val notCompletedColor = MaterialTheme.colorScheme.secondary
   val completedColor = MaterialTheme.colorScheme.inversePrimary
 
@@ -207,7 +215,7 @@ fun TodoListItem(
 
     Text(
       modifier = Modifier.weight(weight = 1f),
-      text = taskName,
+      text = capitalizedName,
       style = MaterialTheme.typography.bodyLarge,
       color = animatedTaskNameColor,
       textDecoration = remember(isCompleted) {
