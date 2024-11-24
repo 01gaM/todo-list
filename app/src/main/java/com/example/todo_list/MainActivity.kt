@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
         MainScreenContent(
           taskList = taskList,
           onItemClick = onItemClick,
-          onItemDelete = onItemDelete
+          onItemDelete = onItemDelete,
+          onDeleteAllClick = { taskList.clear() }
         )
       }
     }
