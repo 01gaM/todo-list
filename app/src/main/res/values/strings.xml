@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">To-Do List</string>
+
+    <!--    MainScreen-->
+    <string name="main_screen_empty_list_title">List is empty!</string>
+    <string name="main_screen_empty_list_description">Tap on \"+\" to add a new item.</string>
 </resources>

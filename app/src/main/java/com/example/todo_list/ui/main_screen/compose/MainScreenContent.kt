@@ -30,11 +30,13 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.todo_list.R
 import com.example.todo_list.ui.composables.SwipeToDeleteContainer
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
@@ -58,7 +60,7 @@ fun MainScreenContent(
         title = {
           Text(
             modifier = Modifier.fillMaxWidth(),
-            text = "To-Do list",
+            text = stringResource(R.string.app_name),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
@@ -82,14 +84,14 @@ fun MainScreenContent(
         verticalArrangement = Arrangement.Center
       ) {
         Text(
-          text = "List is empty!",
+          text = stringResource(R.string.main_screen_empty_list_title),
           style = MaterialTheme.typography.titleLarge,
           color = MaterialTheme.colorScheme.primary,
           fontWeight = FontWeight.Bold,
         )
         Text(
           modifier = Modifier.padding(top = 8.dp),
-          text = "Tap on \"+\" to add a new item.",
+          text = stringResource(R.string.main_screen_empty_list_description),
           style = MaterialTheme.typography.titleMedium,
           color = MaterialTheme.colorScheme.secondary
         )
