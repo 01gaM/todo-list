@@ -17,9 +17,9 @@ class MainActivity : ComponentActivity() {
     setContent {
       val taskList = remember {
         mutableStateListOf(
-          TodoTask(name = "task1"),
-          TodoTask(name = "task2"),
-          TodoTask(name = "task3")
+          TodoTask(name = "task1", id = 1),
+          TodoTask(name = "task2", id = 2),
+          TodoTask(name = "task3", id = 3)
         )
       }
 
@@ -29,10 +29,15 @@ class MainActivity : ComponentActivity() {
         }
       }
 
+      val onItemDelete: (TodoTask) -> Unit = { deletedTask ->
+        taskList.remove(deletedTask)
+      }
+
       ToDoListTheme {
         MainScreenContent(
           taskList = taskList,
-          onItemClick = onItemClick
+          onItemClick = onItemClick,
+          onItemDelete = onItemDelete
         )
       }
     }

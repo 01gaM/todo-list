@@ -1,10 +1,15 @@
 package com.example.todo_list.ui.main_screen.compose
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,16 +24,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.todo_list.ui.composables.SwipeToDeleteContainer
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
 
@@ -36,9 +43,12 @@ import com.example.todo_list.ui.theme.ToDoListTheme
 @Composable
 fun MainScreenContent(
   modifier: Modifier = Modifier,
-  taskList: SnapshotStateList<TodoTask> = mutableStateListOf(),
-  onItemClick: (Int) -> Unit = {}
+  taskList: List<TodoTask> = emptyList(),
+  onItemClick: (Int) -> Unit = {},
+  onItemDelete: (TodoTask) -> Unit = {}
 ) {
+  val isTaskListEmpty by remember(taskList) { derivedStateOf { taskList.isEmpty() } }
+
   Scaffold(
     modifier = modifier
       .fillMaxSize()
@@ -59,18 +69,49 @@ fun MainScreenContent(
       )
     }
   ) { innerPadding ->
-    LazyColumn(contentPadding = innerPadding) {
-      itemsIndexed(
-        items = taskList,
-        key = { index, _ -> index }
-      ) { index, item ->
-        TodoListItem(
-          modifier = Modifier.animateItemPlacement(),
-          taskNumber = index + 1,
-          taskName = item.name,
-          isCompleted = item.isCompleted,
-          onClick = { onItemClick(index) }
+    AnimatedVisibility(
+      visible = isTaskListEmpty,
+      enter = fadeIn(),
+      exit = fadeOut()
+    ) {
+      Column(
+        modifier = Modifier
+          .padding(paddingValues = innerPadding)
+          .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+      ) {
+        Text(
+          text = "List is empty!",
+          style = MaterialTheme.typography.titleLarge,
+          color = MaterialTheme.colorScheme.primary,
+          fontWeight = FontWeight.Bold,
         )
+        Text(
+          modifier = Modifier.padding(top = 8.dp),
+          text = "Tap on \"+\" to add a new item.",
+          style = MaterialTheme.typography.titleMedium,
+          color = MaterialTheme.colorScheme.secondary
+        )
+      }
+    }
+
+    if (!isTaskListEmpty) {
+      LazyColumn(contentPadding = innerPadding) {
+        itemsIndexed(
+          items = taskList,
+          key = { _, task -> task.id }
+        ) { index, item ->
+          SwipeToDeleteContainer(item = item, onDelete = onItemDelete) {
+            TodoListItem(
+              modifier = Modifier.animateItemPlacement(),
+              taskNumber = index + 1,
+              taskName = item.name,
+              isCompleted = item.isCompleted,
+              onClick = { onItemClick(index) }
+            )
+          }
+        }
       }
     }
   }
@@ -99,6 +140,7 @@ fun TodoListItem(
     modifier = modifier
       .fillMaxWidth()
       .clickable(onClick = onClick)
+      .background(color = MaterialTheme.colorScheme.background)
       .padding(all = 16.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
@@ -137,9 +179,9 @@ private fun MainScreenContentPreview() {
     MainScreenContent(
       taskList = remember {
         mutableStateListOf(
-          TodoTask(name = "task1"),
-          TodoTask(name = "task2"),
-          TodoTask(name = "task3")
+          TodoTask(name = "task1", id = 1),
+          TodoTask(name = "task2", id = 2),
+          TodoTask(name = "task3", id = 3)
         )
       }
     )
