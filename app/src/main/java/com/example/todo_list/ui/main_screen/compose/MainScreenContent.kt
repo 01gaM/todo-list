@@ -2,6 +2,7 @@ package com.example.todo_list.ui.main_screen.compose
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +60,8 @@ fun MainScreenContent(
   onItemClick: (Int) -> Unit = {},
   onItemDelete: (TodoTask) -> Unit = {},
   onDeleteAllClick: () -> Unit = {},
-  onItemMoved: (Int, Int) -> Unit = { _, _ -> }
+  onItemMoved: (Int, Int) -> Unit = { _, _ -> },
+  onItemAdd: (String) -> Unit = {}
 ) {
   val isTaskListEmpty by remember(taskList) { derivedStateOf { taskList.isEmpty() } }
   var displayMenu by remember { mutableStateOf(false) }
@@ -65,6 +70,7 @@ fun MainScreenContent(
     onItemMoved(from.index, to.index)
   }
   var isReorderingMode by remember { mutableStateOf(false) }
+  var showBottomSheet by remember { mutableStateOf(false) }
 
   Scaffold(
     modifier = modifier
@@ -129,82 +135,108 @@ fun MainScreenContent(
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
           onClick = { isReorderingMode = false }) {
-          Text(text = stringResource(R.string.main_screen_button_save).uppercase())
+          Text(text = stringResource(R.string.save).uppercase())
         }
+      }
+    },
+    floatingActionButton = {
+      AnimatedVisibility(
+        visible = !isReorderingMode,
+        enter = fadeIn(),
+        exit = fadeOut()
+      ) {
+        FloatingActionButton(
+          shape = CircleShape,
+          content = {
+            Icon(
+              imageVector = Icons.Default.Add,
+              contentDescription = "Add task icon"
+            )
+          },
+          onClick = { showBottomSheet = true }
+        )
       }
     }
   ) { innerPadding ->
-    AnimatedVisibility(
-      visible = isTaskListEmpty,
-      enter = fadeIn(),
-      exit = fadeOut()
-    ) {
-      Column(
-        modifier = Modifier
-          .padding(paddingValues = innerPadding)
-          .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-      ) {
-        Text(
-          text = stringResource(R.string.main_screen_empty_list_title),
-          style = MaterialTheme.typography.titleLarge,
-          color = MaterialTheme.colorScheme.primary,
-          fontWeight = FontWeight.Bold,
-        )
-        Text(
-          modifier = Modifier.padding(top = 8.dp),
-          text = stringResource(R.string.main_screen_empty_list_description),
-          style = MaterialTheme.typography.titleMedium,
-          color = MaterialTheme.colorScheme.secondary
-        )
-      }
-    }
-
-    if (!isTaskListEmpty) {
-      LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = lazyListState,
-        contentPadding = innerPadding
-      ) {
-        itemsIndexed(
-          items = taskList,
-          key = { _, task -> task.id }
-        ) { index, item ->
-          if (isReorderingMode) {
-            ReorderableItem(
-              state = reorderableLazyListState,
-              key = item.id
-            ) { _ ->
-              TodoListItem(
-                modifier = Modifier
-                  .draggableHandle()
-                  .animateItem(),
-                taskNumber = index + 1,
-                taskName = item.name,
-                isCompleted = item.isCompleted,
-                isReorderingMode = isReorderingMode,
-                onClick = { onItemClick(index) }
-              )
-            }
-          } else {
-            SwipeToDeleteContainer(
-              item = item,
-              onDelete = onItemDelete
-            ) {
-              TodoListItem(
-                modifier = Modifier.animateItem(),
-                taskNumber = index + 1,
-                taskName = item.name,
-                isCompleted = item.isCompleted,
-                isReorderingMode = isReorderingMode,
-                onClick = { onItemClick(index) }
-              )
+    Crossfade(
+      targetState = isTaskListEmpty,
+      label = "List content/empty list message transition"
+    ) { isListEmpty ->
+      if (isListEmpty) {
+        Column(
+          modifier = Modifier
+            .padding(paddingValues = innerPadding)
+            .fillMaxSize(),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center
+        ) {
+          Text(
+            text = stringResource(R.string.main_screen_empty_list_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+          )
+          Text(
+            modifier = Modifier.padding(top = 8.dp),
+            text = stringResource(R.string.main_screen_empty_list_description),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.secondary
+          )
+        }
+      } else {
+        LazyColumn(
+          modifier = Modifier.fillMaxSize(),
+          state = lazyListState,
+          contentPadding = innerPadding
+        ) {
+          itemsIndexed(
+            items = taskList,
+            key = { _, task -> task.id }
+          ) { index, item ->
+            if (isReorderingMode) {
+              ReorderableItem(
+                state = reorderableLazyListState,
+                key = item.id
+              ) { _ ->
+                TodoListItem(
+                  modifier = Modifier
+                    .draggableHandle()
+                    .animateItem(),
+                  taskNumber = index + 1,
+                  taskName = item.name,
+                  isCompleted = item.isCompleted,
+                  isReorderingMode = isReorderingMode,
+                  onClick = { onItemClick(index) }
+                )
+              }
+            } else {
+              SwipeToDeleteContainer(
+                item = item,
+                onDelete = onItemDelete
+              ) {
+                TodoListItem(
+                  modifier = Modifier.animateItem(),
+                  taskNumber = index + 1,
+                  taskName = item.name,
+                  isCompleted = item.isCompleted,
+                  isReorderingMode = isReorderingMode,
+                  onClick = { onItemClick(index) }
+                )
+              }
             }
           }
         }
       }
     }
+
+    NewTaskBottomSheet(
+      visible = showBottomSheet,
+      onDismiss = { showBottomSheet = false },
+      onSaveItem = { newItemName ->
+        onItemAdd(newItemName)
+        showBottomSheet = false
+      }
+    )
   }
 }
 

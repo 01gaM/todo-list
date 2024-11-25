@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import com.example.todo_list.ui.main_screen.compose.MainScreenContent
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,13 +39,23 @@ class MainActivity : ComponentActivity() {
         taskList.add(toIndex, item)
       }
 
+      val onItemAdd: (String) -> Unit = { newItemName ->
+        taskList.add(
+          TodoTask(
+            id = Random(100).nextInt(), // TODO: add unique id generation
+            name = newItemName
+          )
+        )
+      }
+
       ToDoListTheme {
         MainScreenContent(
           taskList = taskList,
           onItemClick = onItemClick,
           onItemDelete = onItemDelete,
           onDeleteAllClick = { taskList.clear() },
-          onItemMoved = onItemMoved
+          onItemMoved = onItemMoved,
+          onItemAdd = onItemAdd
         )
       }
     }
