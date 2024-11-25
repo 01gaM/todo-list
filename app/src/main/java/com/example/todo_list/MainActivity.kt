@@ -33,12 +33,18 @@ class MainActivity : ComponentActivity() {
         taskList.remove(deletedTask)
       }
 
+      val onItemMoved: (Int, Int) -> Unit = { fromIndex, toIndex ->
+        val item = taskList.removeAt(fromIndex)
+        taskList.add(toIndex, item)
+      }
+
       ToDoListTheme {
         MainScreenContent(
           taskList = taskList,
           onItemClick = onItemClick,
           onItemDelete = onItemDelete,
-          onDeleteAllClick = { taskList.clear() }
+          onDeleteAllClick = { taskList.clear() },
+          onItemMoved = onItemMoved
         )
       }
     }

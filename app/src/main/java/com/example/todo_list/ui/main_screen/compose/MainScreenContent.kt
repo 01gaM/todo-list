@@ -2,26 +2,22 @@ package com.example.todo_list.ui.main_screen.compose
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,31 +35,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
 import com.example.todo_list.ui.composables.SwipeToDeleteContainer
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
-import java.util.Locale
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreenContent(
   modifier: Modifier = Modifier,
   taskList: List<TodoTask> = emptyList(),
   onItemClick: (Int) -> Unit = {},
   onItemDelete: (TodoTask) -> Unit = {},
-  onDeleteAllClick: () -> Unit = {}
+  onDeleteAllClick: () -> Unit = {},
+  onItemMoved: (Int, Int) -> Unit = { _, _ -> }
 ) {
-  val context = LocalContext.current
   val isTaskListEmpty by remember(taskList) { derivedStateOf { taskList.isEmpty() } }
   var displayMenu by remember { mutableStateOf(false) }
+  val lazyListState = rememberLazyListState()
+  val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+    onItemMoved(from.index, to.index)
+  }
+  var isReorderingMode by remember { mutableStateOf(false) }
 
   Scaffold(
     modifier = modifier
@@ -83,44 +83,53 @@ fun MainScreenContent(
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
         actions = {
-          IconButton(
-            onClick = { displayMenu = !displayMenu },
-            content = {
-              Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More icon",
-                tint = MaterialTheme.colorScheme.onPrimary
-              )
-            }
-          )
+          AnimatedVisibility(
+            visible = !isReorderingMode,
+            enter = expandIn(),
+            exit = shrinkOut()
+          ) {
+            IconButton(
+              onClick = { displayMenu = !displayMenu },
+              content = {
+                Icon(
+                  imageVector = Icons.Default.MoreVert,
+                  contentDescription = "More icon",
+                  tint = MaterialTheme.colorScheme.onPrimary
+                )
+              }
+            )
+          }
 
-          DropdownMenu(
-            expanded = displayMenu,
-            onDismissRequest = { displayMenu = false },
-            content = {
-              DropdownMenuItem(
-                text = {
-                  Text(
-                    text = context.getString(R.string.main_screen_menu_delete_all).uppercase(),
-                    color = MaterialTheme.colorScheme.primary
-                  )
-                },
-                leadingIcon = {
-                  Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete all icon",
-                    tint = MaterialTheme.colorScheme.primary
-                  )
-                },
-                onClick = {
-                  displayMenu = false
-                  onDeleteAllClick()
-                }
-              )
+          MainScreenMenu(
+            isVisible = displayMenu,
+            onDismiss = { displayMenu = false },
+            onDeleteAllClick = {
+              displayMenu = false
+              onDeleteAllClick()
+            },
+            onReorderTasksClick = {
+              displayMenu = false
+              isReorderingMode = true
             }
           )
         }
       )
+    },
+    bottomBar = {
+      AnimatedVisibility(
+        visible = isReorderingMode,
+        enter = fadeIn(),
+        exit = fadeOut()
+      ) {
+        Button(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp),
+          onClick = { isReorderingMode = false }) {
+          Text(text = stringResource(R.string.main_screen_button_save).uppercase())
+        }
+      }
     }
   ) { innerPadding ->
     AnimatedVisibility(
@@ -151,82 +160,49 @@ fun MainScreenContent(
     }
 
     if (!isTaskListEmpty) {
-      LazyColumn(contentPadding = innerPadding) {
+      LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = lazyListState,
+        contentPadding = innerPadding
+      ) {
         itemsIndexed(
           items = taskList,
           key = { _, task -> task.id }
         ) { index, item ->
-          SwipeToDeleteContainer(item = item, onDelete = onItemDelete) {
-            TodoListItem(
-              modifier = Modifier.animateItemPlacement(),
-              taskNumber = index + 1,
-              taskName = item.name,
-              isCompleted = item.isCompleted,
-              onClick = { onItemClick(index) }
-            )
+          if (isReorderingMode) {
+            ReorderableItem(
+              state = reorderableLazyListState,
+              key = item.id
+            ) { _ ->
+              TodoListItem(
+                modifier = Modifier
+                  .draggableHandle()
+                  .animateItem(),
+                taskNumber = index + 1,
+                taskName = item.name,
+                isCompleted = item.isCompleted,
+                isReorderingMode = isReorderingMode,
+                onClick = { onItemClick(index) }
+              )
+            }
+          } else {
+            SwipeToDeleteContainer(
+              item = item,
+              onDelete = onItemDelete
+            ) {
+              TodoListItem(
+                modifier = Modifier.animateItem(),
+                taskNumber = index + 1,
+                taskName = item.name,
+                isCompleted = item.isCompleted,
+                isReorderingMode = isReorderingMode,
+                onClick = { onItemClick(index) }
+              )
+            }
           }
         }
       }
     }
-  }
-}
-
-@Composable
-fun TodoListItem(
-  modifier: Modifier = Modifier,
-  taskNumber: Int,
-  taskName: String,
-  isCompleted: Boolean,
-  onClick: () -> Unit
-) {
-  val capitalizedName = remember(taskName) {
-    taskName.replaceFirstChar {
-      if (it.isLowerCase()) it.titlecase(Locale.getDefault())
-      else it.toString()
-    }
-  }
-
-  val notCompletedColor = MaterialTheme.colorScheme.secondary
-  val completedColor = MaterialTheme.colorScheme.inversePrimary
-
-  val taskNameColor = remember(key1 = isCompleted) {
-    if (isCompleted) completedColor else notCompletedColor
-  }
-  val animatedTaskNameColor by animateColorAsState(
-    targetValue = taskNameColor,
-    label = "taskNameColor"
-  )
-
-  Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .clickable(onClick = onClick)
-      .background(color = MaterialTheme.colorScheme.background)
-      .padding(all = 16.dp),
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-
-    Text(
-      modifier = Modifier.padding(end = 16.dp),
-      text = "$taskNumber.",
-      style = MaterialTheme.typography.titleLarge,
-      color = MaterialTheme.colorScheme.primary
-    )
-
-    Text(
-      modifier = Modifier.weight(weight = 1f),
-      text = capitalizedName,
-      style = MaterialTheme.typography.bodyLarge,
-      color = animatedTaskNameColor,
-      textDecoration = remember(isCompleted) {
-        if (isCompleted) TextDecoration.LineThrough else null
-      }
-    )
-
-    Checkbox(
-      checked = isCompleted,
-      onCheckedChange = null
-    )
   }
 }
 
@@ -241,34 +217,10 @@ private fun MainScreenContentPreview() {
       taskList = remember {
         mutableStateListOf(
           TodoTask(name = "task1", id = 1),
-          TodoTask(name = "task2", id = 2),
+          TodoTask(name = "task2", id = 2, isCompleted = true),
           TodoTask(name = "task3", id = 3)
         )
       }
-    )
-  }
-}
-
-@Preview(showBackground = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, backgroundColor = 0x000000)
-@Composable
-private fun TodoListItemPreview() {
-  ToDoListTheme {
-    TodoListItem(taskNumber = 1, taskName = "Some task", isCompleted = false, onClick = {})
-  }
-}
-
-
-@Preview(showBackground = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, backgroundColor = 0x000000)
-@Composable
-private fun TodoListItemCompletedPreview() {
-  ToDoListTheme {
-    TodoListItem(
-      taskNumber = 1,
-      taskName = "Some task",
-      isCompleted = true,
-      onClick = {}
     )
   }
 }
