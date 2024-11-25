@@ -55,7 +55,8 @@ class MainActivity : ComponentActivity() {
           onItemDelete = onItemDelete,
           onDeleteAllClick = { taskList.clear() },
           onItemMoved = onItemMoved,
-          onItemAdd = onItemAdd
+          onItemAdd = onItemAdd,
+          onShuffleListClick = { taskList.shuffle() }
         )
       }
     }

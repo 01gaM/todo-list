@@ -61,7 +61,8 @@ fun MainScreenContent(
   onItemDelete: (TodoTask) -> Unit = {},
   onDeleteAllClick: () -> Unit = {},
   onItemMoved: (Int, Int) -> Unit = { _, _ -> },
-  onItemAdd: (String) -> Unit = {}
+  onItemAdd: (String) -> Unit = {},
+  onShuffleListClick: () -> Unit = {}
 ) {
   val isTaskListEmpty by remember(taskList) { derivedStateOf { taskList.isEmpty() } }
   var displayMenu by remember { mutableStateOf(false) }
@@ -118,6 +119,10 @@ fun MainScreenContent(
             onReorderTasksClick = {
               displayMenu = false
               isReorderingMode = true
+            },
+            onShuffleListClick = {
+              displayMenu = false
+              onShuffleListClick()
             }
           )
         }
@@ -199,9 +204,7 @@ fun MainScreenContent(
                 key = item.id
               ) { _ ->
                 TodoListItem(
-                  modifier = Modifier
-                    .draggableHandle()
-                    .animateItem(),
+                  modifier = Modifier.draggableHandle(),
                   taskNumber = index + 1,
                   taskName = item.name,
                   isCompleted = item.isCompleted,
@@ -211,11 +214,11 @@ fun MainScreenContent(
               }
             } else {
               SwipeToDeleteContainer(
+                modifier = Modifier.animateItem(),
                 item = item,
                 onDelete = onItemDelete
               ) {
                 TodoListItem(
-                  modifier = Modifier.animateItem(),
                   taskNumber = index + 1,
                   taskName = item.name,
                   isCompleted = item.isCompleted,

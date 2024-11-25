@@ -2,6 +2,7 @@ package com.example.todo_list.ui.main_screen.compose
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -17,7 +18,8 @@ fun MainScreenMenu(
   isVisible: Boolean,
   onDismiss: () -> Unit,
   onDeleteAllClick: () -> Unit,
-  onReorderTasksClick: () -> Unit
+  onReorderTasksClick: () -> Unit,
+  onShuffleListClick: () -> Unit
 ) {
   val context = LocalContext.current
   DropdownMenu(
@@ -56,6 +58,23 @@ fun MainScreenMenu(
           )
         },
         onClick = onReorderTasksClick
+      )
+
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = context.getString(R.string.main_screen_menu_shuffle),
+            color = MaterialTheme.colorScheme.primary
+          )
+        },
+        leadingIcon = {
+          Icon(
+            imageVector = Icons.Rounded.AutoFixHigh,
+            contentDescription = "Shuffle icon",
+            tint = MaterialTheme.colorScheme.primary
+          )
+        },
+        onClick = onShuffleListClick
       )
     }
   )

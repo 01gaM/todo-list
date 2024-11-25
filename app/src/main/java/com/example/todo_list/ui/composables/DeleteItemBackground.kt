@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -32,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.example.todo_list.ui.theme.ToDoListTheme
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SwipeToDeleteContainer(
+  modifier: Modifier = Modifier,
   item: T,
   onDelete: (T) -> Unit,
   animationDuration: Int = 500,
@@ -60,6 +59,7 @@ fun <T> SwipeToDeleteContainer(
   }
 
   AnimatedVisibility(
+    modifier = modifier,
     visible = !isRemoved,
     exit = shrinkVertically(
       tween(durationMillis = animationDuration),
@@ -75,7 +75,6 @@ fun <T> SwipeToDeleteContainer(
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
   val color = if (swipeToDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
