@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -63,12 +64,13 @@ fun MainScreenContent(
   val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
     onItemMoved(from.index, to.index)
   }
-  var isReorderingMode by remember { mutableStateOf(false) }
+  var isReorderingMode by remember { mutableStateOf(true) }
 
   Scaffold(
     modifier = modifier
       .fillMaxSize()
-      .background(color = MaterialTheme.colorScheme.background),
+      .background(color = MaterialTheme.colorScheme.background)
+      .navigationBarsPadding(),
     topBar = {
       TopAppBar(
         title = {
@@ -125,7 +127,7 @@ fun MainScreenContent(
           modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp),
+            .padding(bottom = 16.dp),
           onClick = { isReorderingMode = false }) {
           Text(text = stringResource(R.string.main_screen_button_save).uppercase())
         }

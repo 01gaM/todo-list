@@ -79,7 +79,7 @@ fun <T> SwipeToDeleteContainer(
 @Composable
 fun DeleteItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
   val color = if (swipeToDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-    Color.Red
+    MaterialTheme.colorScheme.error
   } else {
     Color.Transparent
   }
