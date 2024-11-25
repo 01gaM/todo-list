@@ -64,7 +64,7 @@ fun MainScreenContent(
   val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
     onItemMoved(from.index, to.index)
   }
-  var isReorderingMode by remember { mutableStateOf(true) }
+  var isReorderingMode by remember { mutableStateOf(false) }
 
   Scaffold(
     modifier = modifier
