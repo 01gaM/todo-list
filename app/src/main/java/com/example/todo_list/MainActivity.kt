@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
       val onItemAdd: (String) -> Unit = { newItemName ->
         taskList.add(
           TodoTask(
-            id = Random(100).nextInt(), // TODO: add unique id generation
+            id = Random.Default.nextInt(), // TODO: set item database id
             name = newItemName
           )
         )
