@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
-import com.example.todo_list.ui.composables.SwipeToDeleteContainer
+import com.example.todo_list.ui.composables.SwipeActionContainer
 import com.example.todo_list.ui.main_screen.model.TodoTask
 import com.example.todo_list.ui.theme.ToDoListTheme
 import sh.calvin.reorderable.ReorderableItem
@@ -62,6 +62,7 @@ fun MainScreenContent(
   onDeleteAllClick: () -> Unit = {},
   onItemMoved: (Int, Int) -> Unit = { _, _ -> },
   onItemAdd: (String) -> Unit = {},
+  onItemUpdate: (TodoTask) -> Unit = {},
   onShuffleListClick: () -> Unit = {}
 ) {
   val isTaskListEmpty by remember(taskList) { derivedStateOf { taskList.isEmpty() } }
@@ -71,7 +72,9 @@ fun MainScreenContent(
     onItemMoved(from.index, to.index)
   }
   var isReorderingMode by remember { mutableStateOf(false) }
-  var showBottomSheet by remember { mutableStateOf(false) }
+  var showNewTaskBottomSheet by remember { mutableStateOf(false) }
+  var taskToEdit: TodoTask? by remember { mutableStateOf(null) }
+  val showEditTaskBottomSheet = remember(taskToEdit) { taskToEdit != null }
 
   Scaffold(
     modifier = modifier
@@ -158,7 +161,7 @@ fun MainScreenContent(
               contentDescription = "Add task icon"
             )
           },
-          onClick = { showBottomSheet = true }
+          onClick = { showNewTaskBottomSheet = true }
         )
       }
     }
@@ -196,12 +199,12 @@ fun MainScreenContent(
         ) {
           itemsIndexed(
             items = taskList,
-            key = { _, task -> task.id }
+            key = { _, task -> task.id.toString() + task.name }
           ) { index, item ->
             if (isReorderingMode) {
               ReorderableItem(
                 state = reorderableLazyListState,
-                key = item.id
+                key = item.id.toString() + item.name
               ) { _ ->
                 TodoListItem(
                   modifier = Modifier.draggableHandle(),
@@ -213,10 +216,11 @@ fun MainScreenContent(
                 )
               }
             } else {
-              SwipeToDeleteContainer(
+              SwipeActionContainer(
                 modifier = Modifier.animateItem(),
                 item = item,
-                onDelete = onItemDelete
+                onDelete = onItemDelete,
+                onEdit = { taskToEdit = item }
               ) {
                 TodoListItem(
                   taskNumber = index + 1,
@@ -233,13 +237,25 @@ fun MainScreenContent(
     }
 
     NewTaskBottomSheet(
-      visible = showBottomSheet,
-      onDismiss = { showBottomSheet = false },
+      visible = showNewTaskBottomSheet,
+      onDismiss = { showNewTaskBottomSheet = false },
       onSaveItem = { newItemName ->
         onItemAdd(newItemName)
-        showBottomSheet = false
+        showNewTaskBottomSheet = false
       }
     )
+
+    taskToEdit?.let {
+      EditTaskBottomSheet(
+        visible = showEditTaskBottomSheet,
+        task = it,
+        onDismiss = { taskToEdit = null },
+        onSaveItem = { updatedItem ->
+          onItemUpdate(updatedItem)
+          taskToEdit = null
+        }
+      )
+    }
   }
 }
 

@@ -14,4 +14,8 @@
     <!--    NewTaskBottomSheet-->
     <string name="new_task_bottom_sheet_title">New task</string>
     <string name="new_task_bottom_sheet_task_name">Task name</string>
+
+    <!--    EditTaskBottomSheet-->
+    <string name="edit_task_bottom_sheet_title">Edit task</string>
+    <string name="edit_task_bottom_sheet_task_name">Task name</string>
 </resources>

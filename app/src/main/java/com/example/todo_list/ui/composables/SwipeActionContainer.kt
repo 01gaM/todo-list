@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -32,21 +33,29 @@ import com.example.todo_list.ui.theme.ToDoListTheme
 import kotlinx.coroutines.delay
 
 @Composable
-fun <T> SwipeToDeleteContainer(
+fun <T> SwipeActionContainer(
   modifier: Modifier = Modifier,
   item: T,
   onDelete: (T) -> Unit,
+  onEdit: () -> Unit,
   animationDuration: Int = 500,
   content: @Composable (T) -> Unit
 ) {
   var isRemoved by remember { mutableStateOf(false) }
   val dismissState = rememberSwipeToDismissBoxState(
     confirmValueChange = { value ->
-      if (value == SwipeToDismissBoxValue.EndToStart) {
-        isRemoved = true
-        true
-      } else {
-        false
+      when (value) {
+        SwipeToDismissBoxValue.EndToStart -> {
+          isRemoved = true
+          true
+        }
+
+        SwipeToDismissBoxValue.StartToEnd -> {
+          onEdit()
+          false
+        }
+
+        else -> false
       }
     }
   )
@@ -68,19 +77,28 @@ fun <T> SwipeToDeleteContainer(
   ) {
     SwipeToDismissBox(
       state = dismissState,
-      backgroundContent = { DeleteItemBackground(swipeToDismissState = dismissState) },
-      content = { content(item) },
-      enableDismissFromStartToEnd = false
+      backgroundContent = { ItemBackground(swipeToDismissState = dismissState) },
+      content = { content(item) }
     )
   }
 }
 
 @Composable
-fun DeleteItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
-  val color = if (swipeToDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-    MaterialTheme.colorScheme.error
-  } else {
-    Color.Transparent
+private fun ItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
+  val (color, icon, alignment) = when (swipeToDismissState.dismissDirection) {
+    SwipeToDismissBoxValue.EndToStart -> Triple(
+      MaterialTheme.colorScheme.error,
+      Icons.Default.Delete,
+      Alignment.CenterEnd
+    )
+
+    SwipeToDismissBoxValue.StartToEnd -> Triple(
+      MaterialTheme.colorScheme.tertiary,
+      Icons.Default.Edit,
+      Alignment.CenterStart
+    )
+
+    else -> Triple(Color.Transparent, null, Alignment.Center)
   }
 
   Box(
@@ -88,13 +106,15 @@ fun DeleteItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
       .fillMaxSize()
       .background(color)
       .padding(all = 16.dp),
-    contentAlignment = Alignment.CenterEnd
+    contentAlignment = alignment
   ) {
-    Icon(
-      tint = Color.White,
-      imageVector = Icons.Default.Delete,
-      contentDescription = "Delete icon"
-    )
+    if (icon != null) {
+      Icon(
+        tint = Color.White,
+        imageVector = icon,
+        contentDescription = "Item action icon"
+      )
+    }
   }
 }
 
@@ -104,9 +124,10 @@ fun DeleteItemBackground(swipeToDismissState: SwipeToDismissBoxState) {
 @Preview(showBackground = true)
 private fun SwipeToDeleteContainerPreview() {
   ToDoListTheme {
-    SwipeToDeleteContainer(
-      item = null,
+    SwipeActionContainer(
+      item = "test",
       onDelete = {},
+      onEdit = {},
       content = {
         Box(
           modifier = Modifier

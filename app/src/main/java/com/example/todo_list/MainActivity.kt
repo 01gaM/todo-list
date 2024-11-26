@@ -48,6 +48,11 @@ class MainActivity : ComponentActivity() {
         )
       }
 
+      val onItemEdit: (TodoTask) -> Unit = { updatedTask ->
+        val index = taskList.indexOfFirst { it.id == updatedTask.id }
+        taskList[index] = updatedTask
+      }
+
       ToDoListTheme {
         MainScreenContent(
           taskList = taskList,
@@ -56,6 +61,7 @@ class MainActivity : ComponentActivity() {
           onDeleteAllClick = { taskList.clear() },
           onItemMoved = onItemMoved,
           onItemAdd = onItemAdd,
+          onItemUpdate = onItemEdit,
           onShuffleListClick = { taskList.shuffle() }
         )
       }
