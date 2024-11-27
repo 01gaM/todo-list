@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.main_screen.compose
+package com.example.todo_list.features.main_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.animation.Crossfade
@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.todo_list.ui.theme.ToDoListTheme
+import com.example.todo_list.common.ui.theme.ToDoListTheme
 import java.util.Locale
 
 @Composable

@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.main_screen.compose
+package com.example.todo_list.features.main_screen.compose_views
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete

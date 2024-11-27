@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.main_screen.model
+package com.example.todo_list.features.main_screen.model
 
 data class TodoTask(
   val id: Int,

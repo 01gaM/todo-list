@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.composables
+package com.example.todo_list.common.ui.compose_views
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.todo_list.ui.theme.ToDoListTheme
+import com.example.todo_list.common.ui.theme.ToDoListTheme
 import kotlinx.coroutines.delay
 
 @Composable

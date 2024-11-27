@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.composables
+package com.example.todo_list.common.ui.compose_views
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet

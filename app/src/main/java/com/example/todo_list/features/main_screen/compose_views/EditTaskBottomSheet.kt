@@ -1,4 +1,4 @@
-package com.example.todo_list.ui.main_screen.compose
+package com.example.todo_list.features.main_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -22,28 +22,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
-import com.example.todo_list.ui.composables.BaseModalBottomSheet
-import com.example.todo_list.ui.theme.ToDoListTheme
+import com.example.todo_list.common.ui.compose_views.BaseModalBottomSheet
+import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.common.ui.theme.ToDoListTheme
 
 @Composable
-fun NewTaskBottomSheet(
+fun EditTaskBottomSheet(
   modifier: Modifier = Modifier,
+  task: TodoTask,
   visible: Boolean,
   onDismiss: () -> Unit,
-  onSaveItem: (String) -> Unit
+  onSaveItem: (TodoTask) -> Unit
 ) {
   BaseModalBottomSheet(
     modifier = modifier,
     visible = visible,
     onDismiss = onDismiss,
   ) {
-    BottomSheetContent(onSaveItem = onSaveItem)
+    BottomSheetContent(
+      task = task,
+      onSaveItem = onSaveItem
+    )
   }
 }
 
+
 @Composable
-private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
-  var taskName by remember { mutableStateOf("") }
+private fun BottomSheetContent(
+  task: TodoTask,
+  onSaveItem: (TodoTask) -> Unit
+) {
+  var taskName by remember { mutableStateOf(task.name) }
   Column(
     modifier = Modifier
       .fillMaxWidth()
@@ -53,7 +62,7 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
   ) {
     Text(
       modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.new_task_bottom_sheet_title),
+      text = stringResource(R.string.edit_task_bottom_sheet_title),
       color = MaterialTheme.colorScheme.onBackground,
       textAlign = TextAlign.Center,
       fontWeight = FontWeight.Bold
@@ -63,16 +72,16 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
       modifier = Modifier.fillMaxWidth(),
       value = taskName,
       onValueChange = { taskName = it },
-      label = { Text(text = stringResource(R.string.new_task_bottom_sheet_task_name)) }
+      label = { Text(text = stringResource(R.string.edit_task_bottom_sheet_task_name)) }
     )
 
     Button(
       modifier = Modifier.fillMaxWidth(),
-      onClick = { onSaveItem(taskName) },
+      onClick = {
+        onSaveItem(task.copy(name = taskName))
+                },
       enabled = taskName.isNotEmpty(),
-      content = {
-        Text(text = stringResource(R.string.save).uppercase())
-      }
+      content = { Text(text = stringResource(R.string.save).uppercase()) }
     )
   }
 }
@@ -82,9 +91,12 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
 @Composable
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun NewTaskBottomSheetContentPreview() {
+private fun EditTaskBottomSheetPreview() {
   ToDoListTheme {
-    BottomSheetContent(onSaveItem = {})
+    BottomSheetContent(
+      task = TodoTask(name = "Some task", id = 1),
+      onSaveItem = {}
+    )
   }
 }
 
