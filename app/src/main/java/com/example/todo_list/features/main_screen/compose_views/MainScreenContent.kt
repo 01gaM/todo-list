@@ -32,8 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -59,7 +57,7 @@ fun MainScreenContent(
   state: MainScreenState,
   onEvent: (MainScreenEvent) -> Unit = {}
 ) {
-  val isTaskListEmpty by remember(state.taskList) { derivedStateOf { state.taskList.isEmpty() } }
+  val isTaskListEmpty = remember(state.taskList) { state.taskList.isEmpty() }
   val lazyListState = rememberLazyListState()
   val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
     onEvent(MainScreenEvent.TaskMoved(from.index, to.index))
