@@ -69,7 +69,7 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
     Button(
       modifier = Modifier.fillMaxWidth(),
       onClick = { onSaveItem(taskName) },
-      enabled = taskName.isNotEmpty(),
+      enabled = taskName.isNotBlank(),
       content = {
         Text(text = stringResource(R.string.save).uppercase())
       }

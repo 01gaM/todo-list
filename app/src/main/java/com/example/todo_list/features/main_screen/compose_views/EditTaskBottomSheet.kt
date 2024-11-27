@@ -80,7 +80,7 @@ private fun BottomSheetContent(
       onClick = {
         onSaveItem(task.copy(name = taskName))
                 },
-      enabled = taskName.isNotEmpty(),
+      enabled = taskName.isNotBlank(),
       content = { Text(text = stringResource(R.string.save).uppercase()) }
     )
   }
