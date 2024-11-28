@@ -70,11 +70,19 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
       is MainScreenEvent.TaskMoved -> handleTaskMoved(event.fromIndex, event.toIndex)
 
       is MainScreenEvent.ReorderTasksClicked -> {
-        _uiState.update { it.copy(isReorderingMode = true) }
+        _uiState.update {
+          it.copy(
+            reorderingModeTaskList = it.taskList,
+            isReorderingMode = true
+          )
+        }
       }
 
       is MainScreenEvent.ReorderTasksCompleted -> {
-        _uiState.update { it.copy(isReorderingMode = false) }
+        CoroutineScope(Dispatchers.IO).launch {
+          todoListRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
+          _uiState.update { it.copy(isReorderingMode = false) }
+        }
       }
 
       is MainScreenEvent.TasksShuffled -> {
@@ -101,8 +109,8 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
 
   private fun handleTaskClicked(index: Int) {
     CoroutineScope(Dispatchers.IO).launch {
-      with(todoListRepository.getTaskAtIndex(index)) {
-        todoListRepository.updateTaskCompleted(taskId = uid, isCompleted = !isCompleted)
+      todoListRepository.getTaskAtIndex(index)?.let {
+        todoListRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
       }
     }
   }
@@ -114,8 +122,11 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
   }
 
   private fun handleTaskMoved(fromIndex: Int, toIndex: Int) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.updateTaskIndex(fromIndex = fromIndex, toIndex = toIndex)
+    _uiState.update {
+      val newList = it.reorderingModeTaskList.toMutableList()
+      val item = newList.removeAt(fromIndex)
+      newList.add(toIndex, item)
+      it.copy(reorderingModeTaskList = newList)
     }
   }
 

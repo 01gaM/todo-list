@@ -44,7 +44,7 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
-  suspend fun getTaskAtIndex(index: Int): TodoTaskEntity = todoListDao.findByIndex(index = index)
+  suspend fun getTaskAtIndex(index: Int): TodoTaskEntity? = todoListDao.findByIndex(index = index)
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
@@ -52,10 +52,15 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
     todoListDao.updateTaskCompleted(taskId, isCompleted)
   }
 
-  @Suppress("RedundantSuspendModifier")
   @WorkerThread
-  suspend fun updateTaskIndex(fromIndex: Int, toIndex: Int) {
-    todoListDao.updateTaskIndex(fromIndex, toIndex)
+  suspend fun updateTasksIndexes(updatedList: List<TodoTask>) {
+    val oldList = todoListDao.getAll().first()
+    updatedList.forEachIndexed { index, todoTask ->
+      val oldIndex = oldList.find { it.uid == todoTask.id }?.taskIndex
+      if (oldIndex != index) {
+        todoListDao.updateTaskIndex(taskId = todoTask.id, index = index)
+      }
+    }
   }
 
   @Suppress("RedundantSuspendModifier")

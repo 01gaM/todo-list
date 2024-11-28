@@ -25,7 +25,7 @@ interface TodoListDao {
   fun findById(id: Int): TodoTaskEntity
 
   @Query("SELECT * FROM todo_task WHERE task_index LIKE :index LIMIT 1")
-  fun findByIndex(index: Int): TodoTaskEntity
+  fun findByIndex(index: Int): TodoTaskEntity?
 
   @Insert
   fun insert(task: TodoTaskEntity)

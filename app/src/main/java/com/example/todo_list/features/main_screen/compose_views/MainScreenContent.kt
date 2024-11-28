@@ -8,8 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -34,10 +32,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -158,37 +154,22 @@ fun MainScreenContent(
       label = "List content/empty list message transition"
     ) { isListEmpty ->
       if (isListEmpty) {
-        Column(
+        EmptyTodoListContent(
           modifier = Modifier
             .padding(paddingValues = innerPadding)
-            .fillMaxSize(),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.Center
-        ) {
-          Text(
-            text = stringResource(R.string.main_screen_empty_list_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-          )
-          Text(
-            modifier = Modifier.padding(top = 8.dp),
-            text = stringResource(R.string.main_screen_empty_list_description),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.secondary
-          )
-        }
+            .fillMaxSize()
+        )
       } else {
         LazyColumn(
           modifier = Modifier.fillMaxSize(),
           state = lazyListState,
           contentPadding = innerPadding
         ) {
-          itemsIndexed(
-            items = state.taskList,
-            key = { _, task -> task.id.toString() + task.name }
-          ) { index, item ->
-            if (state.isReorderingMode) {
+          if (state.isReorderingMode) {
+            itemsIndexed(
+              items = state.reorderingModeTaskList,
+              key = { _, task -> task.id.toString() + task.name }
+            ) { index, item ->
               ReorderableItem(
                 state = reorderableLazyListState,
                 key = item.id.toString() + item.name
@@ -202,7 +183,12 @@ fun MainScreenContent(
                   onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
                 )
               }
-            } else {
+            }
+          } else {
+            itemsIndexed(
+              items = state.taskList,
+              key = { _, task -> task.id.toString() + task.name }
+            ) { index, item ->
               SwipeActionContainer(
                 modifier = Modifier.animateItem(),
                 item = item,
@@ -222,27 +208,27 @@ fun MainScreenContent(
         }
       }
     }
+  }
 
-    NewTaskBottomSheet(
-      visible = state.showNewTaskBottomSheet,
-      onDismiss = { onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed) },
-      onSaveItem = { newItemName ->
-        onEvent(MainScreenEvent.NewTaskAdded(newItemName))
-        onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed)
+  NewTaskBottomSheet(
+    visible = state.showNewTaskBottomSheet,
+    onDismiss = { onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed) },
+    onSaveItem = { newItemName ->
+      onEvent(MainScreenEvent.NewTaskAdded(newItemName))
+      onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed)
+    }
+  )
+
+  state.taskToEdit?.let {
+    EditTaskBottomSheet(
+      visible = true,
+      task = it,
+      onDismiss = { onEvent(MainScreenEvent.EditTaskBottomSheetDismissed) },
+      onSaveItem = { updatedItem ->
+        onEvent(MainScreenEvent.TaskEdited(updatedItem))
+        onEvent(MainScreenEvent.EditTaskBottomSheetDismissed)
       }
     )
-
-    state.taskToEdit?.let {
-      EditTaskBottomSheet(
-        visible = true,
-        task = it,
-        onDismiss = { onEvent(MainScreenEvent.EditTaskBottomSheetDismissed) },
-        onSaveItem = { updatedItem ->
-          onEvent(MainScreenEvent.TaskEdited(updatedItem))
-          onEvent(MainScreenEvent.EditTaskBottomSheetDismissed)
-        }
-      )
-    }
   }
 }
 
