@@ -17,15 +17,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MainScreenViewModel(private val repository: TodoListRepository) : ViewModel() {
+class MainScreenViewModel(private val todoListRepository: TodoListRepository) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
 
-  init {
-    viewModelScope.launch {
-      bindUiStateToDatabase()
-    }
-  }
+  init { viewModelScope.launch { bindUiStateToDatabase() } }
 
   fun handleEvent(event: MainScreenEvent) {
     when (event) {
@@ -46,14 +42,14 @@ class MainScreenViewModel(private val repository: TodoListRepository) : ViewMode
       is MainScreenEvent.TaskClicked -> handleTaskClicked(event.index)
 
       is MainScreenEvent.AllTasksDeleted -> {
-        _uiState.update {
-          it.copy(taskList = emptyList())
+        CoroutineScope(Dispatchers.IO).launch {
+          todoListRepository.deleteAll()
         }
       }
 
       is MainScreenEvent.TaskDeleted -> {
-        _uiState.update { currState ->
-          currState.copy(taskList = currState.taskList.filterNot { it == event.task })
+        CoroutineScope(Dispatchers.IO).launch {
+          todoListRepository.deleteTaskById(event.task.id)
         }
       }
 
@@ -82,7 +78,9 @@ class MainScreenViewModel(private val repository: TodoListRepository) : ViewMode
       }
 
       is MainScreenEvent.TasksShuffled -> {
-        _uiState.update { it.copy(taskList = it.taskList.shuffled()) }
+        CoroutineScope(Dispatchers.IO).launch {
+          todoListRepository.shuffleIndexes()
+        }
       }
     }
   }
@@ -91,7 +89,7 @@ class MainScreenViewModel(private val repository: TodoListRepository) : ViewMode
 
   private fun handleNewTaskAdded(taskName: String) {
     CoroutineScope(Dispatchers.IO).launch {
-      repository.insert(
+      todoListRepository.insert(
         TodoTaskEntity(
           taskIndex = uiState.value.taskList.size,
           taskName = taskName,
@@ -102,40 +100,27 @@ class MainScreenViewModel(private val repository: TodoListRepository) : ViewMode
   }
 
   private fun handleTaskClicked(index: Int) {
-    _uiState.update {
-      val updatedTask = with(it.taskList[index]) {
-        copy(isCompleted = !isCompleted)
+    CoroutineScope(Dispatchers.IO).launch {
+      with(todoListRepository.getTaskAtIndex(index)) {
+        todoListRepository.updateTaskCompleted(taskId = uid, isCompleted = !isCompleted)
       }
-
-      val newList = it.taskList.toMutableList()
-      newList[index] = updatedTask
-
-      it.copy(taskList = newList)
     }
   }
 
   private fun handleTaskEdited(task: TodoTask) {
-    _uiState.update { currState ->
-      val index = currState.taskList.indexOfFirst { it.id == task.id }
-      currState.copy(
-        taskList = currState.taskList.toMutableList().apply {
-          this[index] = task
-        }
-      )
+    CoroutineScope(Dispatchers.IO).launch {
+      todoListRepository.updateTask(newTask = task)
     }
   }
 
   private fun handleTaskMoved(fromIndex: Int, toIndex: Int) {
-    _uiState.update {
-      val newList = it.taskList.toMutableList()
-      val item = newList.removeAt(fromIndex)
-      newList.add(toIndex, item)
-      it.copy(taskList = newList)
+    CoroutineScope(Dispatchers.IO).launch {
+      todoListRepository.updateTaskIndex(fromIndex = fromIndex, toIndex = toIndex)
     }
   }
 
   private suspend fun bindUiStateToDatabase() {
-    repository.allTasks.collectLatest { taskList ->
+    todoListRepository.allTasks.collectLatest { taskList ->
       _uiState.update { currState ->
         currState.copy(
           taskList = taskList.sortedBy { it.taskIndex }.map { task ->

@@ -21,6 +21,12 @@ interface TodoListDao {
   )
   fun findByName(first: String, last: String): TodoTaskEntity
 
+  @Query("SELECT * FROM todo_task WHERE uid LIKE :id LIMIT 1")
+  fun findById(id: Int): TodoTaskEntity
+
+  @Query("SELECT * FROM todo_task WHERE task_index LIKE :index LIMIT 1")
+  fun findByIndex(index: Int): TodoTaskEntity
+
   @Insert
   fun insert(task: TodoTaskEntity)
 
@@ -32,6 +38,18 @@ interface TodoListDao {
 
   @Query("DELETE FROM todo_task")
   fun deleteAll()
+
+  @Query("DELETE FROM todo_task")
+  fun shuffleIndexes()
+
+  @Query(
+    """UPDATE todo_task SET 
+    is_completed = :isCompleted,
+    task_name = :name 
+    WHERE uid = :taskId
+    """
+  )
+  fun updateTask(taskId: Int, isCompleted: Boolean, name: String)
 
   @Query("UPDATE todo_task SET is_completed = :isCompleted WHERE uid = :taskId")
   fun updateTaskCompleted(taskId: Int, isCompleted: Boolean)
