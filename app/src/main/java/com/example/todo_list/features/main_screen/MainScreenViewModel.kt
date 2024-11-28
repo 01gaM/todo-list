@@ -1,18 +1,31 @@
 package com.example.todo_list.features.main_screen
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.todo_list.data.entities.TodoTaskEntity
+import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.features.main_screen.model.TodoTask
 import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
 import com.example.todo_list.features.main_screen.mvi.MainScreenState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
-import kotlin.random.Random
+import kotlinx.coroutines.launch
 
-class MainScreenViewModel : ViewModel() {
+class MainScreenViewModel(private val repository: TodoListRepository) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
+
+  init {
+    viewModelScope.launch {
+      bindUiStateToDatabase()
+    }
+  }
 
   fun handleEvent(event: MainScreenEvent) {
     when (event) {
@@ -77,16 +90,13 @@ class MainScreenViewModel : ViewModel() {
   // region private
 
   private fun handleNewTaskAdded(taskName: String) {
-    _uiState.update {
-      it.copy(
-        taskList = it.taskList.toMutableList().apply {
-          add(
-            TodoTask(
-              id = Random.nextInt(), // TODO: set item database id
-              name = taskName
-            )
-          )
-        }
+    CoroutineScope(Dispatchers.IO).launch {
+      repository.insert(
+        TodoTaskEntity(
+          taskIndex = uiState.value.taskList.size,
+          taskName = taskName,
+          isCompleted = false
+        )
       )
     }
   }
@@ -124,5 +134,31 @@ class MainScreenViewModel : ViewModel() {
     }
   }
 
+  private suspend fun bindUiStateToDatabase() {
+    repository.allTasks.collectLatest { taskList ->
+      _uiState.update { currState ->
+        currState.copy(
+          taskList = taskList.sortedBy { it.taskIndex }.map { task ->
+            TodoTask(
+              id = task.uid,
+              name = task.taskName,
+              isCompleted = task.isCompleted
+            )
+          }
+        )
+      }
+    }
+  }
+
   // endregion
+}
+
+class MainScreenViewModelFactory(private val repository: TodoListRepository) : ViewModelProvider.Factory {
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
+      @Suppress("UNCHECKED_CAST")
+      return MainScreenViewModel(repository) as T
+    }
+    throw IllegalArgumentException("Unknown ViewModel class")
+  }
 }

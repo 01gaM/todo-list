@@ -10,13 +10,16 @@ import androidx.compose.runtime.getValue
 import com.example.todo_list.features.main_screen.compose_views.MainScreenContent
 import com.example.todo_list.common.ui.theme.ToDoListTheme
 import com.example.todo_list.features.main_screen.MainScreenViewModel
+import com.example.todo_list.features.main_screen.MainScreenViewModelFactory
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      val viewModel by viewModels<MainScreenViewModel>()
+      val viewModel: MainScreenViewModel by viewModels {
+        MainScreenViewModelFactory((application as TodoListApplication).repository)
+      }
       val state by viewModel.uiState.collectAsState()
 
       ToDoListTheme {
