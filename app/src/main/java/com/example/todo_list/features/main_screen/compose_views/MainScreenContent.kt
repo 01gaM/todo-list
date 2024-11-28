@@ -151,7 +151,7 @@ fun MainScreenContent(
   ) { innerPadding ->
     Crossfade(
       targetState = isTaskListEmpty,
-      label = "List content/empty list message transition"
+      label = "cross_fade_empty_list"
     ) { isListEmpty ->
       if (isListEmpty) {
         EmptyTodoListContent(

@@ -49,7 +49,7 @@ fun TodoListItem(
   }
   val animatedTaskNameColor by animateColorAsState(
     targetValue = taskNameColor,
-    label = "taskNameColor"
+    label = "animated_task_name_color"
   )
 
   Row(
@@ -79,7 +79,7 @@ fun TodoListItem(
 
     Crossfade(
       targetState = isReorderingMode,
-      label = "Reordering Icon/Checkbox transition"
+      label = "cross_fade_reorder_icon"
     ) { isReordering ->
       if (isReordering) {
         Icon(
