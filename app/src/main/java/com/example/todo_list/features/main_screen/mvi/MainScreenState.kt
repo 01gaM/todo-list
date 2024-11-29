@@ -8,5 +8,6 @@ data class MainScreenState(
   val isReorderingMode: Boolean = false,
   val showNewTaskBottomSheet: Boolean = false,
   val taskToEdit: TodoTask? = null,
-  val displayMenu: Boolean = false
+  val displayMenu: Boolean = false,
+  val isLoading: Boolean = false
 )

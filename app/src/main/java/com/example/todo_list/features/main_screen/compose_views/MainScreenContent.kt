@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,6 +34,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -149,59 +152,66 @@ fun MainScreenContent(
       }
     }
   ) { innerPadding ->
-    Crossfade(
-      targetState = isTaskListEmpty,
-      label = "cross_fade_empty_list"
-    ) { isListEmpty ->
-      if (isListEmpty) {
-        EmptyTodoListContent(
-          modifier = Modifier
-            .padding(paddingValues = innerPadding)
-            .fillMaxSize()
-        )
-      } else {
-        LazyColumn(
-          modifier = Modifier.fillMaxSize(),
-          state = lazyListState,
-          contentPadding = innerPadding
-        ) {
-          if (state.isReorderingMode) {
-            itemsIndexed(
-              items = state.reorderingModeTaskList,
-              key = { _, task -> task.id.toString() + task.name }
-            ) { index, item ->
-              ReorderableItem(
-                state = reorderableLazyListState,
-                key = item.id.toString() + item.name
-              ) { _ ->
-                TodoListItem(
-                  modifier = Modifier.draggableHandle(),
-                  taskIndex = index + 1,
-                  taskName = item.name,
-                  isCompleted = item.isCompleted,
-                  isReorderingMode = true,
-                  onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
-                )
+    if (state.isLoading) {
+      Box(
+        modifier = Modifier.fillMaxSize().padding(innerPadding),
+        contentAlignment = Alignment.Center
+      ) { CircularProgressIndicator() }
+    } else {
+      Crossfade(
+        targetState = isTaskListEmpty,
+        label = "cross_fade_empty_list"
+      ) { isListEmpty ->
+        if (isListEmpty) {
+          EmptyTodoListContent(
+            modifier = Modifier
+              .padding(paddingValues = innerPadding)
+              .fillMaxSize()
+          )
+        } else {
+          LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState,
+            contentPadding = innerPadding
+          ) {
+            if (state.isReorderingMode) {
+              itemsIndexed(
+                items = state.reorderingModeTaskList,
+                key = { _, task -> task.id.toString() + task.name }
+              ) { index, item ->
+                ReorderableItem(
+                  state = reorderableLazyListState,
+                  key = item.id.toString() + item.name
+                ) { _ ->
+                  TodoListItem(
+                    modifier = Modifier.draggableHandle(),
+                    taskIndex = index + 1,
+                    taskName = item.name,
+                    isCompleted = item.isCompleted,
+                    isReorderingMode = true,
+                    onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
+                  )
+                }
               }
-            }
-          } else {
-            itemsIndexed(
-              items = state.taskList,
-              key = { _, task -> task.id.toString() + task.name }
-            ) { index, item ->
-              SwipeActionContainer(
-                modifier = Modifier.animateItem(),
-                item = item,
-                onDelete = { onEvent(MainScreenEvent.TaskDeleted(item)) },
-                onEdit = { onEvent(MainScreenEvent.EditTaskSelected(item)) }
-              ) {
-                TodoListItem(
-                  taskIndex = index + 1,
-                  taskName = item.name,
-                  isCompleted = item.isCompleted,
-                  isReorderingMode = false,
-                  onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
-                )
+            } else {
+              itemsIndexed(
+                items = state.taskList,
+                key = { _, task -> task.id.toString() + task.name }
+              ) { index, item ->
+                SwipeActionContainer(
+                  modifier = Modifier.animateItem(),
+                  item = item,
+                  onDelete = { onEvent(MainScreenEvent.TaskDeleted(item)) },
+                  onEdit = { onEvent(MainScreenEvent.EditTaskSelected(item)) }
+                ) {
+                  TodoListItem(
+                    taskIndex = index + 1,
+                    taskName = item.name,
+                    isCompleted = item.isCompleted,
+                    isReorderingMode = false,
+                    onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
+                  )
+                }
               }
             }
           }

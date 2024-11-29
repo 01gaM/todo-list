@@ -10,18 +10,27 @@ import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
 import com.example.todo_list.features.main_screen.mvi.MainScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class MainScreenViewModel(private val todoListRepository: TodoListRepository) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
 
-  init { viewModelScope.launch { bindUiStateToDatabase() } }
+  init {
+    _uiState.update { it.copy(isLoading = true) }
+    viewModelScope.launch {
+      // fake delay to show loading animation for demo purposes
+      delay(timeMillis = TimeUnit.SECONDS.toMillis(2))
+      bindUiStateToDatabase()
+    }
+  }
 
   fun handleEvent(event: MainScreenEvent) {
     when (event) {
@@ -134,6 +143,7 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
     todoListRepository.allTasks.collectLatest { taskList ->
       _uiState.update { currState ->
         currState.copy(
+          isLoading = false,
           taskList = taskList.sortedBy { it.taskIndex }.map { task ->
             TodoTask(
               id = task.uid,
@@ -149,7 +159,8 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
   // endregion
 }
 
-class MainScreenViewModelFactory(private val repository: TodoListRepository) : ViewModelProvider.Factory {
+class MainScreenViewModelFactory(private val repository: TodoListRepository) :
+  ViewModelProvider.Factory {
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
     if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
       @Suppress("UNCHECKED_CAST")
