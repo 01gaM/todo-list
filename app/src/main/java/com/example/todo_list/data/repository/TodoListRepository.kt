@@ -23,7 +23,22 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
   suspend fun deleteTaskById(taskId: Int) {
     todoListDao.findById(id = taskId).also {
       todoListDao.delete(it)
+      updateTasksIndexesAfterDeletion(deletedIndex = it.taskIndex)
     }
+  }
+
+  @WorkerThread
+  suspend fun updateTasksIndexesAfterDeletion(deletedIndex: Int) {
+    // Move all tasks indexes after the deleted task on one position
+    todoListDao.getAll().first()
+      .sortedBy { it.taskIndex }
+      .drop(deletedIndex)
+      .forEach {
+        todoListDao.updateTaskIndex(
+          taskId = it.uid,
+          index = it.taskIndex - 1
+        )
+      }
   }
 
   @Suppress("RedundantSuspendModifier")
