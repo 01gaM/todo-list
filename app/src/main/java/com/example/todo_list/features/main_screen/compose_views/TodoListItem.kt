@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.Checkbox
@@ -28,7 +29,7 @@ import java.util.Locale
 @Composable
 fun TodoListItem(
   modifier: Modifier = Modifier,
-  taskNumber: Int,
+  taskIndex: Int,
   taskName: String,
   isCompleted: Boolean,
   isReorderingMode: Boolean = false,
@@ -61,14 +62,16 @@ fun TodoListItem(
     verticalAlignment = Alignment.CenterVertically
   ) {
     Text(
-      modifier = Modifier.padding(end = 16.dp),
-      text = "$taskNumber.",
+      modifier = Modifier.sizeIn(minWidth = 32.dp),
+      text = "$taskIndex.",
       style = MaterialTheme.typography.titleLarge,
       color = MaterialTheme.colorScheme.primary
     )
 
     Text(
-      modifier = Modifier.weight(weight = 1f),
+      modifier = Modifier
+        .weight(weight = 1f)
+        .padding(horizontal = 16.dp),
       text = capitalizedName,
       style = MaterialTheme.typography.bodyLarge,
       color = animatedTaskNameColor,
@@ -104,7 +107,7 @@ fun TodoListItem(
 @Composable
 private fun TodoListItemPreview() {
   ToDoListTheme {
-    TodoListItem(taskNumber = 1, taskName = "Some task", isCompleted = false, onClick = {})
+    TodoListItem(taskIndex = 1, taskName = "Some task", isCompleted = false, onClick = {})
   }
 }
 
@@ -115,9 +118,23 @@ private fun TodoListItemPreview() {
 private fun TodoListItemCompletedPreview() {
   ToDoListTheme {
     TodoListItem(
-      taskNumber = 1,
+      taskIndex = 1,
       taskName = "Some task",
       isCompleted = true,
+      onClick = {}
+    )
+  }
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, backgroundColor = 0x000000)
+@Composable
+private fun TodoListItemIndex99Preview() {
+  ToDoListTheme {
+    TodoListItem(
+      taskIndex = 99,
+      taskName = "Some task",
+      isCompleted = false,
       onClick = {}
     )
   }

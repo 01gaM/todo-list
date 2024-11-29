@@ -176,7 +176,7 @@ fun MainScreenContent(
               ) { _ ->
                 TodoListItem(
                   modifier = Modifier.draggableHandle(),
-                  taskNumber = index + 1,
+                  taskIndex = index + 1,
                   taskName = item.name,
                   isCompleted = item.isCompleted,
                   isReorderingMode = true,
@@ -196,7 +196,7 @@ fun MainScreenContent(
                 onEdit = { onEvent(MainScreenEvent.EditTaskSelected(item)) }
               ) {
                 TodoListItem(
-                  taskNumber = index + 1,
+                  taskIndex = index + 1,
                   taskName = item.name,
                   isCompleted = item.isCompleted,
                   isReorderingMode = false,
