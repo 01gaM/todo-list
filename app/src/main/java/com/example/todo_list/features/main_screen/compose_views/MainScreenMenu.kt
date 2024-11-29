@@ -29,23 +29,6 @@ fun MainScreenMenu(
       DropdownMenuItem(
         text = {
           Text(
-            text = context.getString(R.string.main_screen_menu_delete_all),
-            color = MaterialTheme.colorScheme.primary
-          )
-        },
-        leadingIcon = {
-          Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = "Delete all icon",
-            tint = MaterialTheme.colorScheme.primary
-          )
-        },
-        onClick = onDeleteAllClick
-      )
-
-      DropdownMenuItem(
-        text = {
-          Text(
             text = context.getString(R.string.main_screen_menu_reorder),
             color = MaterialTheme.colorScheme.primary
           )
@@ -75,6 +58,23 @@ fun MainScreenMenu(
           )
         },
         onClick = onShuffleListClick
+      )
+
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = context.getString(R.string.main_screen_menu_delete_all),
+            color = MaterialTheme.colorScheme.primary
+          )
+        },
+        leadingIcon = {
+          Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete all icon",
+            tint = MaterialTheme.colorScheme.primary
+          )
+        },
+        onClick = onDeleteAllClick
       )
     }
   )
