@@ -100,6 +100,7 @@ fun MainScreenContent(
 
           MainScreenMenu(
             isVisible = state.displayMenu,
+            isDeleteCompletedChecked = state.isDeleteCompletedChecked,
             onDismiss = { onEvent(MainScreenEvent.MenuDismissed) },
             onDeleteAllClick = {
               onEvent(MainScreenEvent.MenuDismissed)
@@ -112,6 +113,9 @@ fun MainScreenContent(
             onShuffleListClick = {
               onEvent(MainScreenEvent.MenuDismissed)
               onEvent(MainScreenEvent.TasksShuffled)
+            },
+            onDeleteCompletedChanged = {
+              onEvent(MainScreenEvent.DeleteCompletedCheckedChanged)
             }
           )
         }
@@ -154,7 +158,9 @@ fun MainScreenContent(
   ) { innerPadding ->
     if (state.isLoading) {
       Box(
-        modifier = Modifier.fillMaxSize().padding(innerPadding),
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(innerPadding),
         contentAlignment = Alignment.Center
       ) { CircularProgressIndicator() }
     } else {

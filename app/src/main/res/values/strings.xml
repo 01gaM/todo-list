@@ -8,6 +8,7 @@
     <string name="main_screen_empty_list_title">List is empty!</string>
     <string name="main_screen_empty_list_description">Tap on \"+\" to add a new item.</string>
     <string name="main_screen_menu_delete_all">Delete all</string>
+    <string name="main_screen_menu_delete_completed">Delete completed</string>
     <string name="main_screen_menu_reorder">Reorder tasks</string>
     <string name="main_screen_menu_shuffle">Shuffle tasks</string>
 

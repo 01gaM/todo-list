@@ -99,6 +99,12 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
           todoListRepository.shuffleIndexes()
         }
       }
+
+      is MainScreenEvent.DeleteCompletedCheckedChanged -> {
+        _uiState.update {
+          it.copy(isDeleteCompletedChecked = !it.isDeleteCompletedChecked)
+        }
+      }
     }
   }
 
@@ -120,6 +126,9 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
     CoroutineScope(Dispatchers.IO).launch {
       todoListRepository.getTaskAtIndex(index)?.let {
         todoListRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
+        if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
+            todoListRepository.deleteTaskById(it.uid)
+        }
       }
     }
   }

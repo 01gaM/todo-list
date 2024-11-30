@@ -21,4 +21,5 @@ sealed interface MainScreenEvent {
   data object ReorderTasksClicked : MainScreenEvent
   data object ReorderTasksCompleted : MainScreenEvent
   data object TasksShuffled : MainScreenEvent
+  data object DeleteCompletedCheckedChanged : MainScreenEvent
 }

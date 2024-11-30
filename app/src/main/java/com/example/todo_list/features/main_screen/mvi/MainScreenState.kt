@@ -9,5 +9,6 @@ data class MainScreenState(
   val showNewTaskBottomSheet: Boolean = false,
   val taskToEdit: TodoTask? = null,
   val displayMenu: Boolean = false,
+  val isDeleteCompletedChecked: Boolean = false,
   val isLoading: Boolean = false
 )
