@@ -3,6 +3,7 @@ package com.example.todo_list.features.main_screen.compose_views
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -127,20 +129,23 @@ fun MainScreenContent(
         enter = fadeIn(),
         exit = fadeOut()
       ) {
-        Button(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp),
-          onClick = { onEvent(MainScreenEvent.ReorderTasksCompleted) }) {
-          Text(text = stringResource(R.string.save).uppercase())
+        BottomAppBar {
+          Button(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(horizontal = 16.dp),
+            onClick = { onEvent(MainScreenEvent.ReorderTasksCompleted) },
+            content = {
+              Text(text = stringResource(R.string.save).uppercase())
+            }
+          )
         }
       }
     },
     floatingActionButton = {
       AnimatedVisibility(
         visible = !state.isReorderingMode,
-        enter = fadeIn(),
+        enter = fadeIn(animationSpec = tween(durationMillis = 2000)),
         exit = fadeOut()
       ) {
         FloatingActionButton(
