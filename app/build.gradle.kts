@@ -48,7 +48,6 @@ android {
 }
 
 dependencies {
-
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
@@ -60,6 +59,7 @@ dependencies {
   implementation(libs.androidx.material.icons)
   implementation(libs.reorderable)
   implementation(libs.bundles.room)
+  implementation(libs.datastore.preferences)
   ksp(libs.room.compiler)
 
   testImplementation(libs.junit)

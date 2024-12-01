@@ -3,6 +3,7 @@ package com.example.todo_list.features.main_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.todo_list.data.data_store.DataStoreManager
 import com.example.todo_list.data.entities.TodoTaskEntity
 import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.features.main_screen.model.TodoTask
@@ -15,11 +16,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class MainScreenViewModel(private val todoListRepository: TodoListRepository) : ViewModel() {
+class MainScreenViewModel(
+  private val todoListRepository: TodoListRepository,
+  private val dataStoreManager: DataStoreManager
+) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
 
@@ -28,7 +34,7 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
     viewModelScope.launch {
       // fake delay to show loading animation for demo purposes
       delay(timeMillis = TimeUnit.SECONDS.toMillis(2))
-      bindUiStateToDatabase()
+      bindUiStateToData()
     }
   }
 
@@ -101,8 +107,8 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
       }
 
       is MainScreenEvent.DeleteCompletedCheckedChanged -> {
-        _uiState.update {
-          it.copy(isDeleteCompletedChecked = !it.isDeleteCompletedChecked)
+        viewModelScope.launch {
+          dataStoreManager.updateIsDeleteCompletedChecked(!uiState.value.isDeleteCompletedChecked)
         }
       }
     }
@@ -127,7 +133,7 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
       todoListRepository.getTaskAtIndex(index)?.let {
         todoListRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
         if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
-            todoListRepository.deleteTaskById(it.uid)
+          todoListRepository.deleteTaskById(it.uid)
         }
       }
     }
@@ -148,12 +154,14 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
     }
   }
 
-  private suspend fun bindUiStateToDatabase() {
-    todoListRepository.allTasks.collectLatest { taskList ->
-      _uiState.update { currState ->
-        currState.copy(
+  private suspend fun bindUiStateToData() {
+    todoListRepository.allTasks.combine(
+      dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
+      transform = { tasks, isDeleteCompletedChecked ->
+        uiState.value.copy(
           isLoading = false,
-          taskList = taskList.sortedBy { it.taskIndex }.map { task ->
+          isDeleteCompletedChecked = isDeleteCompletedChecked,
+          taskList = tasks.sortedBy { it.taskIndex }.map { task ->
             TodoTask(
               id = task.uid,
               name = task.taskName,
@@ -162,18 +170,21 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
           }
         )
       }
-    }
+    ).collectLatest { newState -> _uiState.update { newState } }
   }
 
   // endregion
 }
 
-class MainScreenViewModelFactory(private val repository: TodoListRepository) :
+class MainScreenViewModelFactory(
+  private val repository: TodoListRepository,
+  private val dataStoreManager: DataStoreManager
+) :
   ViewModelProvider.Factory {
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
     if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
       @Suppress("UNCHECKED_CAST")
-      return MainScreenViewModel(repository) as T
+      return MainScreenViewModel(repository, dataStoreManager) as T
     }
     throw IllegalArgumentException("Unknown ViewModel class")
   }

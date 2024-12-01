@@ -11,6 +11,7 @@ composeBom = "2024.11.00"
 reorderable = "2.4.0"
 roomVersion = "2.6.1"
 kspVersion = "1.9.0-1.0.13"
+dataStoreVersion = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,11 +33,12 @@ reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.r
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomVersion" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomVersion" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStoreVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion"}
+kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
 
 [bundles]
 room = ["room-runtime", "room-ktx"]
