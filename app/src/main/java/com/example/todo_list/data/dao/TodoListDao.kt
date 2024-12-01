@@ -13,7 +13,7 @@ interface TodoListDao {
   fun getAll(): Flow<List<TodoTaskEntity>>
 
   @Query("SELECT * FROM todo_task WHERE uid LIKE :id LIMIT 1")
-  fun findById(id: Int): TodoTaskEntity
+  fun findById(id: Int): TodoTaskEntity?
 
   @Query("SELECT * FROM todo_task WHERE task_index LIKE :index LIMIT 1")
   fun findByIndex(index: Int): TodoTaskEntity?

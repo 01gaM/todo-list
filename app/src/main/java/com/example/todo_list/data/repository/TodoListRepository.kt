@@ -1,5 +1,6 @@
 package com.example.todo_list.data.repository
 
+import android.util.Log
 import androidx.annotation.WorkerThread
 import com.example.todo_list.data.dao.TodoListDao
 import com.example.todo_list.data.entities.TodoTaskEntity
@@ -20,9 +21,12 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
 
   @WorkerThread
   suspend fun deleteTaskById(taskId: Int) {
-    todoListDao.findById(id = taskId).also {
-      todoListDao.delete(it)
-      updateTasksIndexesAfterDeletion(deletedIndex = it.taskIndex)
+    val task = todoListDao.findById(id = taskId)
+    if (task != null) {
+      todoListDao.delete(task)
+      updateTasksIndexesAfterDeletion(deletedIndex = task.taskIndex)
+    } else {
+      Log.e(javaClass.simpleName, "Task with id \"$taskId\" not found")
     }
   }
 
