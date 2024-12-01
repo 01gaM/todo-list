@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 class MainScreenViewModel(
@@ -96,7 +97,9 @@ class MainScreenViewModel(
       is MainScreenEvent.ReorderTasksCompleted -> {
         CoroutineScope(Dispatchers.IO).launch {
           todoListRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
-          _uiState.update { it.copy(isReorderingMode = false) }
+          withContext(context = Dispatchers.Main) {
+            _uiState.update { it.copy(isReorderingMode = false) }
+          }
         }
       }
 
