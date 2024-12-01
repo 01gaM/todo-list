@@ -12,15 +12,6 @@ interface TodoListDao {
   @Query("SELECT * FROM todo_task")
   fun getAll(): Flow<List<TodoTaskEntity>>
 
-  @Query("SELECT * FROM todo_task WHERE uid IN (:taskIds)")
-  fun loadAllByIds(taskIds: IntArray): Flow<List<TodoTaskEntity>>
-
-  @Query(
-    "SELECT * FROM todo_task WHERE task_name LIKE :first AND " +
-        "task_name LIKE :last LIMIT 1"
-  )
-  fun findByName(first: String, last: String): TodoTaskEntity
-
   @Query("SELECT * FROM todo_task WHERE uid LIKE :id LIMIT 1")
   fun findById(id: Int): TodoTaskEntity
 
@@ -29,9 +20,6 @@ interface TodoListDao {
 
   @Insert
   fun insert(task: TodoTaskEntity)
-
-  @Insert
-  fun insertAll(vararg tasks: TodoTaskEntity)
 
   @Delete
   fun delete(task: TodoTaskEntity)
@@ -56,7 +44,4 @@ interface TodoListDao {
 
   @Query("UPDATE todo_task SET task_index = :index WHERE uid = :taskId")
   fun updateTaskIndex(taskId: Int, index: Int)
-
-  @Query("UPDATE todo_task SET task_name = :name WHERE uid = :taskId")
-  fun updateTaskName(taskId: Int, name: String)
 }
