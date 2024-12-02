@@ -1,4 +1,4 @@
-package com.example.todo_list.features.main_screen.compose_views
+package com.example.todo_list.features.todo_list_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.animation.Crossfade

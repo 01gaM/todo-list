@@ -1,4 +1,4 @@
-package com.example.todo_list.features.main_screen.compose_views
+package com.example.todo_list.features.todo_list_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
 import com.example.todo_list.common.ui.compose_views.BaseModalBottomSheet
-import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.common.ui.theme.ToDoListTheme
 
 @Composable

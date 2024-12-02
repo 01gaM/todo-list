@@ -1,4 +1,4 @@
-package com.example.todo_list.features.main_screen.compose_views
+package com.example.todo_list.features.todo_list_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
@@ -44,24 +44,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
 import com.example.todo_list.common.ui.compose_views.SwipeActionContainer
-import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.common.ui.theme.ToDoListTheme
-import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
-import com.example.todo_list.features.main_screen.mvi.MainScreenState
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreenContent(
+fun TodoListScreenContent(
   modifier: Modifier = Modifier,
-  state: MainScreenState,
-  onEvent: (MainScreenEvent) -> Unit = {}
+  state: TodoListScreenState,
+  onEvent: (TodoListScreenEvent) -> Unit = {}
 ) {
   val isTaskListEmpty = remember(state.taskList) { state.taskList.isEmpty() }
   val lazyListState = rememberLazyListState()
   val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-    onEvent(MainScreenEvent.TaskMoved(from.index, to.index))
+    onEvent(TodoListScreenEvent.TaskMoved(from.index, to.index))
   }
 
   Scaffold(
@@ -89,7 +89,7 @@ fun MainScreenContent(
             exit = shrinkOut()
           ) {
             IconButton(
-              onClick = { onEvent(MainScreenEvent.MenuClicked) },
+              onClick = { onEvent(TodoListScreenEvent.MenuClicked) },
               content = {
                 Icon(
                   imageVector = Icons.Default.MoreVert,
@@ -100,24 +100,24 @@ fun MainScreenContent(
             )
           }
 
-          MainScreenMenu(
+          TodoListScreenMenu(
             isVisible = state.displayMenu,
             isDeleteCompletedChecked = state.isDeleteCompletedChecked,
-            onDismiss = { onEvent(MainScreenEvent.MenuDismissed) },
+            onDismiss = { onEvent(TodoListScreenEvent.MenuDismissed) },
             onDeleteAllClick = {
-              onEvent(MainScreenEvent.MenuDismissed)
-              onEvent(MainScreenEvent.AllTasksDeleted)
+              onEvent(TodoListScreenEvent.MenuDismissed)
+              onEvent(TodoListScreenEvent.AllTasksDeleted)
             },
             onReorderTasksClick = {
-              onEvent(MainScreenEvent.MenuDismissed)
-              onEvent(MainScreenEvent.ReorderTasksClicked)
+              onEvent(TodoListScreenEvent.MenuDismissed)
+              onEvent(TodoListScreenEvent.ReorderTasksClicked)
             },
             onShuffleListClick = {
-              onEvent(MainScreenEvent.MenuDismissed)
-              onEvent(MainScreenEvent.TasksShuffled)
+              onEvent(TodoListScreenEvent.MenuDismissed)
+              onEvent(TodoListScreenEvent.TasksShuffled)
             },
             onDeleteCompletedChanged = {
-              onEvent(MainScreenEvent.DeleteCompletedCheckedChanged)
+              onEvent(TodoListScreenEvent.DeleteCompletedCheckedChanged)
             }
           )
         }
@@ -134,7 +134,7 @@ fun MainScreenContent(
             modifier = Modifier
               .fillMaxWidth()
               .padding(horizontal = 16.dp),
-            onClick = { onEvent(MainScreenEvent.ReorderTasksCompleted) },
+            onClick = { onEvent(TodoListScreenEvent.ReorderTasksCompleted) },
             content = {
               Text(text = stringResource(R.string.save).uppercase())
             }
@@ -156,7 +156,7 @@ fun MainScreenContent(
               contentDescription = "Add task icon"
             )
           },
-          onClick = { onEvent(MainScreenEvent.AddNewTaskFabClicked) }
+          onClick = { onEvent(TodoListScreenEvent.AddNewTaskFabClicked) }
         )
       }
     }
@@ -200,7 +200,7 @@ fun MainScreenContent(
                     taskName = item.name,
                     isCompleted = item.isCompleted,
                     isReorderingMode = true,
-                    onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
+                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(index)) }
                   )
                 }
               }
@@ -212,15 +212,15 @@ fun MainScreenContent(
                 SwipeActionContainer(
                   modifier = Modifier.animateItem(),
                   item = item,
-                  onDelete = { onEvent(MainScreenEvent.TaskDeleted(item)) },
-                  onEdit = { onEvent(MainScreenEvent.EditTaskSelected(item)) }
+                  onDelete = { onEvent(TodoListScreenEvent.TaskDeleted(item)) },
+                  onEdit = { onEvent(TodoListScreenEvent.EditTaskSelected(item)) }
                 ) {
                   TodoListItem(
                     taskIndex = index + 1,
                     taskName = item.name,
                     isCompleted = item.isCompleted,
                     isReorderingMode = false,
-                    onClick = { onEvent(MainScreenEvent.TaskClicked(index)) }
+                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(index)) }
                   )
                 }
               }
@@ -233,10 +233,10 @@ fun MainScreenContent(
 
   NewTaskBottomSheet(
     visible = state.showNewTaskBottomSheet,
-    onDismiss = { onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed) },
+    onDismiss = { onEvent(TodoListScreenEvent.AddNewTaskBottomSheetDismissed) },
     onSaveItem = { newItemName ->
-      onEvent(MainScreenEvent.NewTaskAdded(newItemName))
-      onEvent(MainScreenEvent.AddNewTaskBottomSheetDismissed)
+      onEvent(TodoListScreenEvent.NewTaskAdded(newItemName))
+      onEvent(TodoListScreenEvent.AddNewTaskBottomSheetDismissed)
     }
   )
 
@@ -244,10 +244,10 @@ fun MainScreenContent(
     EditTaskBottomSheet(
       visible = true,
       task = it,
-      onDismiss = { onEvent(MainScreenEvent.EditTaskBottomSheetDismissed) },
+      onDismiss = { onEvent(TodoListScreenEvent.EditTaskBottomSheetDismissed) },
       onSaveItem = { updatedItem ->
-        onEvent(MainScreenEvent.TaskEdited(updatedItem))
-        onEvent(MainScreenEvent.EditTaskBottomSheetDismissed)
+        onEvent(TodoListScreenEvent.TaskEdited(updatedItem))
+        onEvent(TodoListScreenEvent.EditTaskBottomSheetDismissed)
       }
     )
   }
@@ -258,10 +258,10 @@ fun MainScreenContent(
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun MainScreenContentPreview() {
+private fun TodoListScreenContentPreview() {
   ToDoListTheme {
-    MainScreenContent(
-      state = MainScreenState(taskList = remember {
+    TodoListScreenContent(
+      state = TodoListScreenState(taskList = remember {
         mutableStateListOf(
           TodoTask(name = "task1", id = 1),
           TodoTask(name = "task2", id = 2, isCompleted = true),

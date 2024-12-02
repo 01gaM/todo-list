@@ -1,14 +1,14 @@
-package com.example.todo_list.features.main_screen
+package com.example.todo_list.features.todo_list_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.todo_list.data.data_store.DataStoreManager
 import com.example.todo_list.data.entities.TodoTaskEntity
-import com.example.todo_list.data.repository.TodoListRepository
-import com.example.todo_list.features.main_screen.model.TodoTask
-import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
-import com.example.todo_list.features.main_screen.mvi.MainScreenState
+import com.example.todo_list.data.repository.TodoTaskRepository
+import com.example.todo_list.features.todo_list_screen.model.TodoTask
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,12 +23,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-class MainScreenViewModel(
-  private val todoListRepository: TodoListRepository,
+class TodoListScreenViewModel(
+  private val todoTaskRepository: TodoTaskRepository,
   private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
-  private val _uiState = MutableStateFlow(MainScreenState())
-  val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
+  private val _uiState = MutableStateFlow(TodoListScreenState())
+  val uiState: StateFlow<TodoListScreenState> = _uiState.asStateFlow()
 
   init {
     _uiState.update { it.copy(isLoading = true) }
@@ -39,53 +39,53 @@ class MainScreenViewModel(
     }
   }
 
-  fun handleEvent(event: MainScreenEvent) {
+  fun handleEvent(event: TodoListScreenEvent) {
     when (event) {
-      is MainScreenEvent.NewTaskAdded -> handleNewTaskAdded(event.newTaskName)
+      is TodoListScreenEvent.NewTaskAdded -> handleNewTaskAdded(event.newTaskName)
 
-      is MainScreenEvent.AddNewTaskBottomSheetDismissed -> {
+      is TodoListScreenEvent.AddNewTaskBottomSheetDismissed -> {
         _uiState.update { it.copy(showNewTaskBottomSheet = false) }
       }
 
-      is MainScreenEvent.AddNewTaskFabClicked -> {
+      is TodoListScreenEvent.AddNewTaskFabClicked -> {
         _uiState.update { it.copy(showNewTaskBottomSheet = true) }
       }
 
-      is MainScreenEvent.MenuClicked -> {
+      is TodoListScreenEvent.MenuClicked -> {
         _uiState.update { it.copy(displayMenu = !it.displayMenu) }
       }
 
-      is MainScreenEvent.TaskClicked -> handleTaskClicked(event.index)
+      is TodoListScreenEvent.TaskClicked -> handleTaskClicked(event.index)
 
-      is MainScreenEvent.AllTasksDeleted -> {
+      is TodoListScreenEvent.AllTasksDeleted -> {
         CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.deleteAll()
+          todoTaskRepository.deleteAll()
         }
       }
 
-      is MainScreenEvent.TaskDeleted -> {
+      is TodoListScreenEvent.TaskDeleted -> {
         CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.deleteTaskById(event.task.id)
+          todoTaskRepository.deleteTaskById(event.task.id)
         }
       }
 
-      is MainScreenEvent.MenuDismissed -> {
+      is TodoListScreenEvent.MenuDismissed -> {
         _uiState.update { it.copy(displayMenu = false) }
       }
 
-      is MainScreenEvent.TaskEdited -> handleTaskEdited(event.updatedTask)
+      is TodoListScreenEvent.TaskEdited -> handleTaskEdited(event.updatedTask)
 
-      is MainScreenEvent.EditTaskBottomSheetDismissed -> {
+      is TodoListScreenEvent.EditTaskBottomSheetDismissed -> {
         _uiState.update { it.copy(taskToEdit = null) }
       }
 
-      is MainScreenEvent.EditTaskSelected -> {
+      is TodoListScreenEvent.EditTaskSelected -> {
         _uiState.update { it.copy(taskToEdit = event.task) }
       }
 
-      is MainScreenEvent.TaskMoved -> handleTaskMoved(event.fromIndex, event.toIndex)
+      is TodoListScreenEvent.TaskMoved -> handleTaskMoved(event.fromIndex, event.toIndex)
 
-      is MainScreenEvent.ReorderTasksClicked -> {
+      is TodoListScreenEvent.ReorderTasksClicked -> {
         _uiState.update {
           it.copy(
             reorderingModeTaskList = it.taskList,
@@ -94,22 +94,22 @@ class MainScreenViewModel(
         }
       }
 
-      is MainScreenEvent.ReorderTasksCompleted -> {
+      is TodoListScreenEvent.ReorderTasksCompleted -> {
         CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
+          todoTaskRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
           withContext(context = Dispatchers.Main) {
             _uiState.update { it.copy(isReorderingMode = false) }
           }
         }
       }
 
-      is MainScreenEvent.TasksShuffled -> {
+      is TodoListScreenEvent.TasksShuffled -> {
         CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.shuffleIndexes()
+          todoTaskRepository.shuffleIndexes()
         }
       }
 
-      is MainScreenEvent.DeleteCompletedCheckedChanged -> {
+      is TodoListScreenEvent.DeleteCompletedCheckedChanged -> {
         viewModelScope.launch {
           dataStoreManager.updateIsDeleteCompletedChecked(!uiState.value.isDeleteCompletedChecked)
         }
@@ -121,7 +121,7 @@ class MainScreenViewModel(
 
   private fun handleNewTaskAdded(taskName: String) {
     CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.insert(
+      todoTaskRepository.insert(
         TodoTaskEntity(
           taskIndex = uiState.value.taskList.size,
           taskName = taskName,
@@ -133,10 +133,10 @@ class MainScreenViewModel(
 
   private fun handleTaskClicked(index: Int) {
     CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.getTaskAtIndex(index)?.let {
-        todoListRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
+      todoTaskRepository.getTaskAtIndex(index)?.let {
+        todoTaskRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
         if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
-          todoListRepository.deleteTaskById(it.uid)
+          todoTaskRepository.deleteTaskById(it.uid)
         }
       }
     }
@@ -144,7 +144,7 @@ class MainScreenViewModel(
 
   private fun handleTaskEdited(task: TodoTask) {
     CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.updateTask(newTask = task)
+      todoTaskRepository.updateTask(newTask = task)
     }
   }
 
@@ -158,7 +158,7 @@ class MainScreenViewModel(
   }
 
   private suspend fun bindUiStateToData() {
-    todoListRepository.allTasks.combine(
+    todoTaskRepository.allTasks.combine(
       dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
       transform = { tasks, isDeleteCompletedChecked ->
         uiState.value.copy(
@@ -179,15 +179,15 @@ class MainScreenViewModel(
   // endregion
 }
 
-class MainScreenViewModelFactory(
-  private val repository: TodoListRepository,
+class TodoListScreenViewModelFactory(
+  private val repository: TodoTaskRepository,
   private val dataStoreManager: DataStoreManager
 ) :
   ViewModelProvider.Factory {
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
+    if (modelClass.isAssignableFrom(TodoListScreenViewModel::class.java)) {
       @Suppress("UNCHECKED_CAST")
-      return MainScreenViewModel(repository, dataStoreManager) as T
+      return TodoListScreenViewModel(repository, dataStoreManager) as T
     }
     throw IllegalArgumentException("Unknown ViewModel class")
   }

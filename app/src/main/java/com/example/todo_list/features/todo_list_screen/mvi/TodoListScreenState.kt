@@ -1,8 +1,8 @@
-package com.example.todo_list.features.main_screen.mvi
+package com.example.todo_list.features.todo_list_screen.mvi
 
-import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.features.todo_list_screen.model.TodoTask
 
-data class MainScreenState(
+data class TodoListScreenState(
   val taskList: List<TodoTask> = emptyList(),
   val reorderingModeTaskList: List<TodoTask> = emptyList(),
   val isReorderingMode: Boolean = false,

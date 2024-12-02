@@ -1,4 +1,4 @@
-package com.example.todo_list.features.main_screen.compose_views
+package com.example.todo_list.features.todo_list_screen.compose_views
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
 
 @Composable
-fun MainScreenMenu(
+fun TodoListScreenMenu(
   isVisible: Boolean,
   isDeleteCompletedChecked: Boolean,
   onDismiss: () -> Unit,

@@ -2,28 +2,28 @@ package com.example.todo_list.data.repository
 
 import android.util.Log
 import androidx.annotation.WorkerThread
-import com.example.todo_list.data.dao.TodoListDao
+import com.example.todo_list.data.dao.TodoTaskDao
 import com.example.todo_list.data.entities.TodoTaskEntity
-import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
 
-class TodoListRepository(private val todoListDao: TodoListDao) {
+class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
 
-  val allTasks: Flow<List<TodoTaskEntity>> = todoListDao.getAll()
+  val allTasks: Flow<List<TodoTaskEntity>> = todoTaskDao.getAll()
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
   suspend fun insert(todoTask: TodoTaskEntity) {
-    todoListDao.insert(todoTask)
+    todoTaskDao.insert(todoTask)
   }
 
   @WorkerThread
   suspend fun deleteTaskById(taskId: Int) {
-    val task = todoListDao.findById(id = taskId)
+    val task = todoTaskDao.findById(id = taskId)
     if (task != null) {
-      todoListDao.delete(task)
+      todoTaskDao.delete(task)
       updateTasksIndexesAfterDeletion(deletedIndex = task.taskIndex)
     } else {
       Log.e(javaClass.simpleName, "Task with id \"$taskId\" not found")
@@ -32,14 +32,14 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
-  suspend fun deleteAll() = todoListDao.deleteAll()
+  suspend fun deleteAll() = todoTaskDao.deleteAll()
 
   @WorkerThread
   suspend fun shuffleIndexes() {
-    val tasks = todoListDao.getAll().first()
+    val tasks = todoTaskDao.getAll().first()
     val shuffledTasksIndexes = tasks.shuffled().map { it.taskIndex }
     for (index in tasks.indices) {
-      todoListDao.updateTaskIndex(
+      todoTaskDao.updateTaskIndex(
         taskId = tasks[index].uid,
         index = shuffledTasksIndexes[index]
       )
@@ -48,21 +48,21 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
-  suspend fun getTaskAtIndex(index: Int): TodoTaskEntity? = todoListDao.findByIndex(index = index)
+  suspend fun getTaskAtIndex(index: Int): TodoTaskEntity? = todoTaskDao.findByIndex(index = index)
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
   suspend fun updateTaskCompleted(taskId: Int, isCompleted: Boolean) {
-    todoListDao.updateTaskCompleted(taskId, isCompleted)
+    todoTaskDao.updateTaskCompleted(taskId, isCompleted)
   }
 
   @WorkerThread
   suspend fun updateTasksIndexes(updatedList: List<TodoTask>) {
-    val oldList = todoListDao.getAll().first()
+    val oldList = todoTaskDao.getAll().first()
     updatedList.forEachIndexed { index, todoTask ->
       val oldIndex = oldList.find { it.uid == todoTask.id }?.taskIndex
       if (oldIndex != index) {
-        todoListDao.updateTaskIndex(taskId = todoTask.id, index = index)
+        todoTaskDao.updateTaskIndex(taskId = todoTask.id, index = index)
       }
     }
   }
@@ -71,7 +71,7 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
   @WorkerThread
   suspend fun updateTask(newTask: TodoTask) {
     with(newTask) {
-      todoListDao.updateTask(
+      todoTaskDao.updateTask(
         taskId = id,
         name = name,
         isCompleted = isCompleted
@@ -84,11 +84,11 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
   @WorkerThread
   private suspend fun updateTasksIndexesAfterDeletion(deletedIndex: Int) {
     // Move all tasks indexes after the deleted task on one position
-    todoListDao.getAll().first()
+    todoTaskDao.getAll().first()
       .sortedBy { it.taskIndex }
       .drop(deletedIndex)
       .forEach {
-        todoListDao.updateTaskIndex(
+        todoTaskDao.updateTaskIndex(
           taskId = it.uid,
           index = it.taskIndex - 1
         )
