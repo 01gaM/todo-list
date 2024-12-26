@@ -1,14 +1,13 @@
 package com.example.todo_list.features.main_screen
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.todo_list.data.entities.TodoTaskEntity
+import com.example.todo_list.data.entities.TodoListEntity
 import com.example.todo_list.data.repository.TodoListRepository
-import com.example.todo_list.features.main_screen.model.TodoTask
+import com.example.todo_list.features.main_screen.model.TodoList
 import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
 import com.example.todo_list.features.main_screen.mvi.MainScreenState
-import kotlinx.coroutines.CoroutineScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,9 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class MainScreenViewModel(private val todoListRepository: TodoListRepository) : ViewModel() {
+@HiltViewModel
+class MainScreenViewModel @Inject constructor(
+  private val todoListRepository: TodoListRepository
+) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
 
@@ -28,75 +32,68 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
     viewModelScope.launch {
       // fake delay to show loading animation for demo purposes
       delay(timeMillis = TimeUnit.SECONDS.toMillis(2))
-      bindUiStateToDatabase()
+      bindUiStateToData()
     }
   }
 
   fun handleEvent(event: MainScreenEvent) {
     when (event) {
-      is MainScreenEvent.NewTaskAdded -> handleNewTaskAdded(event.newTaskName)
-
-      is MainScreenEvent.AddNewTaskBottomSheetDismissed -> {
-        _uiState.update { it.copy(showNewTaskBottomSheet = false) }
+      MainScreenEvent.AddNewListBottomSheetDismissed -> {
+        _uiState.update { it.copy(showNewListBottomSheet = false) }
       }
 
-      is MainScreenEvent.AddNewTaskFabClicked -> {
-        _uiState.update { it.copy(showNewTaskBottomSheet = true) }
+      MainScreenEvent.AddNewListFabClicked -> {
+        _uiState.update { it.copy(showNewListBottomSheet = true) }
       }
 
-      is MainScreenEvent.MenuClicked -> {
-        _uiState.update { it.copy(displayMenu = !it.displayMenu) }
-      }
-
-      is MainScreenEvent.TaskClicked -> handleTaskClicked(event.index)
-
-      is MainScreenEvent.AllTasksDeleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.deleteAll()
+      is MainScreenEvent.NewTodoListAdded -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            todoListRepository.insert(
+              todoList = TodoListEntity(
+                listName = event.newTodoListName
+              )
+            )
+          }
         }
       }
 
-      is MainScreenEvent.TaskDeleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.deleteTaskById(event.task.id)
+      is MainScreenEvent.TodoListsDeleted -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            val idList = uiState.value.todoLists.filter { it.isSelectedToDelete }.map { it.id }
+            todoListRepository.deleteListsById(idList)
+          }
+          withContext(Dispatchers.Main) {
+            _uiState.update { it.copy(isDeleteMode = false) }
+          }
         }
       }
 
-      is MainScreenEvent.MenuDismissed -> {
-        _uiState.update { it.copy(displayMenu = false) }
+      is MainScreenEvent.DeleteModeEnabled -> {
+        if (!event.isEnabled) {
+          _uiState.update {
+            it.copy(
+              isDeleteMode = false,
+              todoLists = it.todoLists.map { list -> list.copy(isSelectedToDelete = false) }
+            )
+          }
+        } else {
+          _uiState.update { it.copy(isDeleteMode = true) }
+        }
       }
 
-      is MainScreenEvent.TaskEdited -> handleTaskEdited(event.updatedTask)
-
-      is MainScreenEvent.EditTaskBottomSheetDismissed -> {
-        _uiState.update { it.copy(taskToEdit = null) }
-      }
-
-      is MainScreenEvent.EditTaskSelected -> {
-        _uiState.update { it.copy(taskToEdit = event.task) }
-      }
-
-      is MainScreenEvent.TaskMoved -> handleTaskMoved(event.fromIndex, event.toIndex)
-
-      is MainScreenEvent.ReorderTasksClicked -> {
+      is MainScreenEvent.TodoListSelectedToDelete -> {
         _uiState.update {
           it.copy(
-            reorderingModeTaskList = it.taskList,
-            isReorderingMode = true
+            todoLists = it.todoLists.map { list ->
+              if (list.id == event.todoList.id) {
+                list.copy(isSelectedToDelete = !list.isSelectedToDelete)
+              } else {
+                list
+              }
+            }
           )
-        }
-      }
-
-      is MainScreenEvent.ReorderTasksCompleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
-          _uiState.update { it.copy(isReorderingMode = false) }
-        }
-      }
-
-      is MainScreenEvent.TasksShuffled -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoListRepository.shuffleIndexes()
         }
       }
     }
@@ -104,51 +101,15 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
 
   // region private
 
-  private fun handleNewTaskAdded(taskName: String) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.insert(
-        TodoTaskEntity(
-          taskIndex = uiState.value.taskList.size,
-          taskName = taskName,
-          isCompleted = false
-        )
-      )
-    }
-  }
-
-  private fun handleTaskClicked(index: Int) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.getTaskAtIndex(index)?.let {
-        todoListRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
-      }
-    }
-  }
-
-  private fun handleTaskEdited(task: TodoTask) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoListRepository.updateTask(newTask = task)
-    }
-  }
-
-  private fun handleTaskMoved(fromIndex: Int, toIndex: Int) {
-    _uiState.update {
-      val newList = it.reorderingModeTaskList.toMutableList()
-      val item = newList.removeAt(fromIndex)
-      newList.add(toIndex, item)
-      it.copy(reorderingModeTaskList = newList)
-    }
-  }
-
-  private suspend fun bindUiStateToDatabase() {
-    todoListRepository.allTasks.collectLatest { taskList ->
-      _uiState.update { currState ->
-        currState.copy(
+  private suspend fun bindUiStateToData() {
+    todoListRepository.allLists.collectLatest { todoList ->
+      _uiState.update { state ->
+        state.copy(
           isLoading = false,
-          taskList = taskList.sortedBy { it.taskIndex }.map { task ->
-            TodoTask(
-              id = task.uid,
-              name = task.taskName,
-              isCompleted = task.isCompleted
+          todoLists = todoList.map {
+            TodoList(
+              id = it.uid,
+              name = it.listName,
             )
           }
         )
@@ -157,15 +118,4 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
   }
 
   // endregion
-}
-
-class MainScreenViewModelFactory(private val repository: TodoListRepository) :
-  ViewModelProvider.Factory {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
-      @Suppress("UNCHECKED_CAST")
-      return MainScreenViewModel(repository) as T
-    }
-    throw IllegalArgumentException("Unknown ViewModel class")
-  }
 }

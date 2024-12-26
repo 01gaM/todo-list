@@ -3,12 +3,16 @@ package com.example.todo_list
 import android.app.Application
 import com.example.todo_list.data.TodoListDatabase
 import com.example.todo_list.data.repository.TodoListRepository
+import com.example.todo_list.data.repository.TodoTaskRepository
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
+@HiltAndroidApp
 class TodoListApplication: Application() {
   val applicationScope = CoroutineScope(SupervisorJob())
 
   val database by lazy { TodoListDatabase.getDatabase(this, applicationScope) }
-  val repository by lazy { TodoListRepository(database.todoTaskDao()) }
+  val todoTaskRepository by lazy { TodoTaskRepository(database.todoTaskDao()) }
+  val todoListRepository by lazy { TodoListRepository(database.todoListDao()) }
 }

@@ -9,5 +9,6 @@ data class TodoTaskEntity(
   @PrimaryKey(autoGenerate = true) val uid: Int = 0,
   @ColumnInfo(name = "task_index") val taskIndex: Int,
   @ColumnInfo(name = "task_name") val taskName: String,
-  @ColumnInfo(name = "is_completed") val isCompleted: Boolean
+  @ColumnInfo(name = "is_completed") val isCompleted: Boolean,
+  @ColumnInfo(name = "list_id", defaultValue = "0") val listId: Int
 )

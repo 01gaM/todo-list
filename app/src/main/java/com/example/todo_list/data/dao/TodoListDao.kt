@@ -1,62 +1,32 @@
 package com.example.todo_list.data.dao
 
+import com.example.todo_list.data.entities.TodoListEntity
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.todo_list.data.entities.TodoTaskEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TodoListDao {
-  @Query("SELECT * FROM todo_task")
-  fun getAll(): Flow<List<TodoTaskEntity>>
+  @Query("SELECT * FROM todo_list")
+  fun getAll(): Flow<List<TodoListEntity>>
 
-  @Query("SELECT * FROM todo_task WHERE uid IN (:taskIds)")
-  fun loadAllByIds(taskIds: IntArray): Flow<List<TodoTaskEntity>>
-
-  @Query(
-    "SELECT * FROM todo_task WHERE task_name LIKE :first AND " +
-        "task_name LIKE :last LIMIT 1"
-  )
-  fun findByName(first: String, last: String): TodoTaskEntity
-
-  @Query("SELECT * FROM todo_task WHERE uid LIKE :id LIMIT 1")
-  fun findById(id: Int): TodoTaskEntity
-
-  @Query("SELECT * FROM todo_task WHERE task_index LIKE :index LIMIT 1")
-  fun findByIndex(index: Int): TodoTaskEntity?
+  @Query("SELECT * FROM todo_list WHERE uid LIKE :id LIMIT 1")
+  fun findById(id: Int): TodoListEntity?
 
   @Insert
-  fun insert(task: TodoTaskEntity)
-
-  @Insert
-  fun insertAll(vararg tasks: TodoTaskEntity)
+  fun insert(task: TodoListEntity)
 
   @Delete
-  fun delete(task: TodoTaskEntity)
+  fun delete(task: TodoListEntity)
 
-  @Query("DELETE FROM todo_task")
+  @Query("DELETE FROM todo_list")
   fun deleteAll()
 
-  @Query("DELETE FROM todo_task")
-  fun shuffleIndexes()
+  @Query("DELETE FROM todo_list WHERE uid IN (:idList)")
+  fun deleteAllById(idList: List<Int>)
 
-  @Query(
-    """UPDATE todo_task SET 
-    is_completed = :isCompleted,
-    task_name = :name 
-    WHERE uid = :taskId
-    """
-  )
-  fun updateTask(taskId: Int, isCompleted: Boolean, name: String)
-
-  @Query("UPDATE todo_task SET is_completed = :isCompleted WHERE uid = :taskId")
-  fun updateTaskCompleted(taskId: Int, isCompleted: Boolean)
-
-  @Query("UPDATE todo_task SET task_index = :index WHERE uid = :taskId")
-  fun updateTaskIndex(taskId: Int, index: Int)
-
-  @Query("UPDATE todo_task SET task_name = :name WHERE uid = :taskId")
-  fun updateTaskName(taskId: Int, name: String)
+  @Query("UPDATE todo_list SET list_name = :name WHERE uid = :listId")
+  fun updateListName(listId: Int, name: String)
 }

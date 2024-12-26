@@ -1,16 +1,24 @@
 package com.example.todo_list.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.todo_list.data.dao.TodoListDao
+import com.example.todo_list.data.dao.TodoTaskDao
+import com.example.todo_list.data.entities.TodoListEntity
 import com.example.todo_list.data.entities.TodoTaskEntity
 import kotlinx.coroutines.CoroutineScope
 
-@Database(entities = [TodoTaskEntity::class], version = 1)
+@Database(
+  version = 3,
+  entities = [TodoTaskEntity::class, TodoListEntity::class],
+  autoMigrations = [AutoMigration(from = 2, to = 3)]
+)
 abstract class TodoListDatabase : RoomDatabase() {
-  abstract fun todoTaskDao(): TodoListDao
+  abstract fun todoTaskDao(): TodoTaskDao
+  abstract fun todoListDao(): TodoListDao
 
   companion object {
     // Singleton prevents multiple instances of database opening at the
@@ -28,7 +36,7 @@ abstract class TodoListDatabase : RoomDatabase() {
         val instance = Room.databaseBuilder(
           context.applicationContext,
           TodoListDatabase::class.java,
-          "word_database"
+          "todo_list_database"
         ).build()
         INSTANCE = instance
         instance
