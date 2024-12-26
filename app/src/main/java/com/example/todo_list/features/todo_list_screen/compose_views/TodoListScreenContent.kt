@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
+import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import com.example.todo_list.common.ui.compose_views.SwipeActionContainer
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.common.ui.theme.ToDoListTheme
@@ -177,7 +178,9 @@ fun TodoListScreenContent(
           EmptyTodoListContent(
             modifier = Modifier
               .padding(paddingValues = innerPadding)
-              .fillMaxSize()
+              .fillMaxSize(),
+            title = stringResource(R.string.todo_list_screen_empty_list_title),
+            description = stringResource(R.string.todo_list_screen_empty_list_description)
           )
         } else {
           LazyColumn(
@@ -231,8 +234,9 @@ fun TodoListScreenContent(
     }
   }
 
-  NewTaskBottomSheet(
+  NewItemBottomSheet(
     visible = state.showNewTaskBottomSheet,
+    title = stringResource(R.string.new_task_bottom_sheet_title),
     onDismiss = { onEvent(TodoListScreenEvent.AddNewTaskBottomSheetDismissed) },
     onSaveItem = { newItemName ->
       onEvent(TodoListScreenEvent.NewTaskAdded(newItemName))

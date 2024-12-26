@@ -9,7 +9,6 @@ import com.example.todo_list.data.repository.TodoTaskRepository
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,14 +57,18 @@ class TodoListScreenViewModel(
       is TodoListScreenEvent.TaskClicked -> handleTaskClicked(event.index)
 
       is TodoListScreenEvent.AllTasksDeleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
           todoTaskRepository.deleteAll()
+            }
         }
       }
 
       is TodoListScreenEvent.TaskDeleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoTaskRepository.deleteTaskById(event.task.id)
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            todoTaskRepository.deleteTaskById(event.task.id)
+          }
         }
       }
 
@@ -95,17 +98,21 @@ class TodoListScreenViewModel(
       }
 
       is TodoListScreenEvent.ReorderTasksCompleted -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoTaskRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
-          withContext(context = Dispatchers.Main) {
-            _uiState.update { it.copy(isReorderingMode = false) }
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            todoTaskRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
+            withContext(context = Dispatchers.Main) {
+              _uiState.update { it.copy(isReorderingMode = false) }
+            }
           }
         }
       }
 
       is TodoListScreenEvent.TasksShuffled -> {
-        CoroutineScope(Dispatchers.IO).launch {
-          todoTaskRepository.shuffleIndexes()
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            todoTaskRepository.shuffleIndexes()
+          }
         }
       }
 
@@ -120,31 +127,37 @@ class TodoListScreenViewModel(
   // region private
 
   private fun handleNewTaskAdded(taskName: String) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoTaskRepository.insert(
-        TodoTaskEntity(
-          taskIndex = uiState.value.taskList.size,
-          taskName = taskName,
-          isCompleted = false
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        todoTaskRepository.insert(
+          TodoTaskEntity(
+            taskIndex = uiState.value.taskList.size,
+            taskName = taskName,
+            isCompleted = false
+          )
         )
-      )
+      }
     }
   }
 
   private fun handleTaskClicked(index: Int) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoTaskRepository.getTaskAtIndex(index)?.let {
-        todoTaskRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
-        if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
-          todoTaskRepository.deleteTaskById(it.uid)
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        todoTaskRepository.getTaskAtIndex(index)?.let {
+          todoTaskRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
+          if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
+            todoTaskRepository.deleteTaskById(it.uid)
+          }
         }
       }
     }
   }
 
   private fun handleTaskEdited(task: TodoTask) {
-    CoroutineScope(Dispatchers.IO).launch {
-      todoTaskRepository.updateTask(newTask = task)
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        todoTaskRepository.updateTask(newTask = task)
+      }
     }
   }
 
@@ -182,8 +195,7 @@ class TodoListScreenViewModel(
 class TodoListScreenViewModelFactory(
   private val repository: TodoTaskRepository,
   private val dataStoreManager: DataStoreManager
-) :
-  ViewModelProvider.Factory {
+) : ViewModelProvider.Factory {
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
     if (modelClass.isAssignableFrom(TodoListScreenViewModel::class.java)) {
       @Suppress("UNCHECKED_CAST")

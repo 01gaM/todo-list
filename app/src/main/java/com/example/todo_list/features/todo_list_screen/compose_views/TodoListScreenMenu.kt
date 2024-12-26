@@ -35,7 +35,7 @@ fun TodoListScreenMenu(
       DropdownMenuItem(
         text = {
           Text(
-            text = context.getString(R.string.main_screen_menu_reorder),
+            text = context.getString(R.string.todo_list_screen_menu_reorder),
             color = MaterialTheme.colorScheme.primary
           )
         },
@@ -52,7 +52,7 @@ fun TodoListScreenMenu(
       DropdownMenuItem(
         text = {
           Text(
-            text = context.getString(R.string.main_screen_menu_shuffle),
+            text = context.getString(R.string.todo_list_screen_menu_shuffle),
             color = MaterialTheme.colorScheme.primary
           )
         },
@@ -69,7 +69,7 @@ fun TodoListScreenMenu(
       DropdownMenuItem(
         text = {
           Text(
-            text = context.getString(R.string.main_screen_menu_delete_completed),
+            text = context.getString(R.string.todo_list_screen_menu_delete_completed),
             color = MaterialTheme.colorScheme.primary
           )
         },
@@ -87,7 +87,7 @@ fun TodoListScreenMenu(
       DropdownMenuItem(
         text = {
           Text(
-            text = context.getString(R.string.main_screen_menu_delete_all),
+            text = context.getString(R.string.todo_list_screen_menu_delete_all),
             color = MaterialTheme.colorScheme.primary
           )
         },

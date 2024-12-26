@@ -1,4 +1,4 @@
-package com.example.todo_list.features.todo_list_screen.compose_views
+package com.example.todo_list.common.ui.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -22,13 +22,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.todo_list.R
-import com.example.todo_list.common.ui.compose_views.BaseModalBottomSheet
 import com.example.todo_list.common.ui.theme.ToDoListTheme
 
 @Composable
-fun NewTaskBottomSheet(
+fun NewItemBottomSheet(
   modifier: Modifier = Modifier,
   visible: Boolean,
+  title: String,
   onDismiss: () -> Unit,
   onSaveItem: (String) -> Unit
 ) {
@@ -37,12 +37,18 @@ fun NewTaskBottomSheet(
     visible = visible,
     onDismiss = onDismiss,
   ) {
-    BottomSheetContent(onSaveItem = onSaveItem)
+    BottomSheetContent(
+      title = title,
+      onSaveItem = onSaveItem
+    )
   }
 }
 
 @Composable
-private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
+private fun BottomSheetContent(
+  title: String,
+  onSaveItem: (String) -> Unit
+) {
   var taskName by rememberSaveable { mutableStateOf("") }
   Column(
     modifier = Modifier
@@ -53,7 +59,7 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
   ) {
     Text(
       modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.new_task_bottom_sheet_title),
+      text = title,
       color = MaterialTheme.colorScheme.onBackground,
       textAlign = TextAlign.Center,
       fontWeight = FontWeight.Bold
@@ -63,7 +69,7 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
       modifier = Modifier.fillMaxWidth(),
       value = taskName,
       onValueChange = { taskName = it },
-      label = { Text(text = stringResource(R.string.new_task_bottom_sheet_task_name)) }
+      label = { Text(text = stringResource(R.string.name)) }
     )
 
     Button(
@@ -84,7 +90,7 @@ private fun BottomSheetContent(onSaveItem: (String) -> Unit) {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun NewTaskBottomSheetContentPreview() {
   ToDoListTheme {
-    BottomSheetContent(onSaveItem = {})
+    BottomSheetContent(title = "New item", onSaveItem = {})
   }
 }
 

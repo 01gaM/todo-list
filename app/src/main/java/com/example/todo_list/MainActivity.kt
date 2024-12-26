@@ -7,27 +7,23 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.example.todo_list.features.todo_list_screen.compose_views.TodoListScreenContent
 import com.example.todo_list.common.ui.theme.ToDoListTheme
-import com.example.todo_list.data.data_store.DataStoreManager
-import com.example.todo_list.features.todo_list_screen.TodoListScreenViewModel
-import com.example.todo_list.features.todo_list_screen.TodoListScreenViewModelFactory
+import com.example.todo_list.features.main_screen.MainScreenViewModel
+import com.example.todo_list.features.main_screen.MainScreenViewModelFactory
+import com.example.todo_list.features.main_screen.compose_views.MainScreenContent
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      val viewModel: TodoListScreenViewModel by viewModels {
-        TodoListScreenViewModelFactory(
-          (application as TodoListApplication).repository,
-          DataStoreManager(applicationContext)
-        )
+      val viewModel: MainScreenViewModel by viewModels {
+        MainScreenViewModelFactory((application as TodoListApplication).todoListRepository)
       }
       val state by viewModel.uiState.collectAsState()
 
       ToDoListTheme {
-        TodoListScreenContent(
+        MainScreenContent(
           state = state,
           onEvent = viewModel::handleEvent
         )

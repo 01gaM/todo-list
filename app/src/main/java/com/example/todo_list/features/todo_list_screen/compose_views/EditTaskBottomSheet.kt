@@ -72,7 +72,7 @@ private fun BottomSheetContent(
       modifier = Modifier.fillMaxWidth(),
       value = taskName,
       onValueChange = { taskName = it },
-      label = { Text(text = stringResource(R.string.edit_task_bottom_sheet_task_name)) }
+      label = { Text(text = stringResource(R.string.name)) }
     )
 
     Button(
