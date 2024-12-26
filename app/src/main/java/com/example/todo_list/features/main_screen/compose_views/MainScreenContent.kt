@@ -5,7 +5,6 @@ import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import android.content.res.Configuration
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -164,7 +163,7 @@ fun MainScreenContent(
 @Composable
 fun TodoListView(name: String, onItemClick: () -> Unit) {
   Card(
-    modifier = Modifier.clickable(onClick = onItemClick),
+    onClick = onItemClick,
     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
   ) {
     Text(
