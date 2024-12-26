@@ -24,6 +24,9 @@ interface TodoListDao {
   @Query("DELETE FROM todo_list")
   fun deleteAll()
 
+  @Query("DELETE FROM todo_list WHERE uid IN (:idList)")
+  fun deleteAllById(idList: List<Int>)
+
   @Query("UPDATE todo_list SET list_name = :name WHERE uid = :listId")
   fun updateListName(listId: Int, name: String)
 }

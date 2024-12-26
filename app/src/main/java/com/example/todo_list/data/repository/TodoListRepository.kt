@@ -18,14 +18,7 @@ class TodoListRepository(private val todoListDao: TodoListDao) {
   }
 
   @WorkerThread
-  fun deleteListById(listId: Int) {
-    val list = todoListDao.findById(id = listId)
-    if (list != null) {
-      todoListDao.delete(list)
-    } else {
-      Log.e(javaClass.simpleName, "Task with id \"$listId\" not found")
-    }
-  }
+  fun deleteListsById(idList: List<Int>) = todoListDao.deleteAllById(idList)
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread

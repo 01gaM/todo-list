@@ -4,7 +4,10 @@ import com.example.todo_list.features.todo_list_screen.compose_views.EmptyTodoLi
 import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import android.content.res.Configuration
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,18 +21,22 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,32 +83,49 @@ fun MainScreenContent(
         },
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
-//        actions = {
-//          IconButton(
-//            onClick = {}, // TODO: add event
-//            content = {
-//              Icon(
-//                imageVector = Icons.Default.MoreVert,
-//                contentDescription = "More icon",
-//                tint = MaterialTheme.colorScheme.onPrimary
-//              )
-//            }
-//          )
-//          // TODO: add menu
-//        }
+        navigationIcon = {
+          if (state.isDeleteMode) {
+            IconButton(
+              onClick = { onEvent(MainScreenEvent.DeleteModeEnabled(isEnabled = false)) },
+              content = {
+                Icon(
+                  imageVector = Icons.Default.Close,
+                  tint = MaterialTheme.colorScheme.onPrimary,
+                  contentDescription = "Cancel delete mode icon"
+                )
+              }
+            )
+          }
+        },
+        actions = {
+          if (state.isDeleteMode) {
+            IconButton(
+              onClick = { onEvent(MainScreenEvent.TodoListsDeleted) },
+              content = {
+                Icon(
+                  imageVector = Icons.Default.Delete,
+                  tint = MaterialTheme.colorScheme.onPrimary,
+                  contentDescription = "Delete selected lists icon"
+                )
+              }
+            )
+          }
+        }
       )
     },
     floatingActionButton = {
-      FloatingActionButton(
-        shape = CircleShape,
-        content = {
-          Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Add task icon"
-          )
-        },
-        onClick = { onEvent(MainScreenEvent.AddNewListFabClicked) }
-      )
+      if (!state.isDeleteMode) {
+        FloatingActionButton(
+          shape = CircleShape,
+          content = {
+            Icon(
+              imageVector = Icons.Default.Add,
+              contentDescription = "Add task icon"
+            )
+          },
+          onClick = { onEvent(MainScreenEvent.AddNewListFabClicked) }
+        )
+      }
     }
   ) { innerPadding ->
     if (state.isLoading) {
@@ -137,9 +161,17 @@ fun MainScreenContent(
           ) {
             items(items = state.todoLists) { item ->
               TodoListView(
-                name = item.name,
+                todoList = item,
+                isDeleteMode = state.isDeleteMode,
+                onItemSelectedToDelete = {
+                  onEvent(MainScreenEvent.TodoListSelectedToDelete(item))
+                },
                 onItemClick = {
                   navController?.navigate(Screen.TodoList.route.plus("/${item.id}"))
+                },
+                onLongClick = {
+                  onEvent(MainScreenEvent.DeleteModeEnabled(isEnabled = true))
+                  onEvent(MainScreenEvent.TodoListSelectedToDelete(item))
                 }
               )
             }
@@ -160,22 +192,56 @@ fun MainScreenContent(
   )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodoListView(name: String, onItemClick: () -> Unit) {
+fun TodoListView(
+  todoList: TodoList,
+  isDeleteMode: Boolean = false,
+  onItemClick: () -> Unit,
+  onLongClick: () -> Unit = {},
+  onItemSelectedToDelete: () -> Unit = {}
+) {
+  val selectedColor = MaterialTheme.colorScheme.tertiaryContainer
+  val notSelectedColor = MaterialTheme.colorScheme.surfaceVariant
+
+  val backgroundColor = remember(key1 = todoList.isSelectedToDelete) {
+    if (todoList.isSelectedToDelete) selectedColor else notSelectedColor
+  }
+  val animatedListBackgroundColor by animateColorAsState(
+    targetValue = backgroundColor,
+    label = "animated_list_background_color"
+  )
+
   Card(
-    onClick = onItemClick,
+    onClick = {},
+    colors = CardDefaults.cardColors().copy(containerColor = animatedListBackgroundColor),
     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
   ) {
-    Text(
+    Box(
       modifier = Modifier
-        .fillMaxWidth()
-        .padding(all = 16.dp),
-      text = name,
-      textAlign = TextAlign.Center,
-      fontWeight = FontWeight.Bold,
-      overflow = TextOverflow.Ellipsis,
-      maxLines = 1
-    )
+        .fillMaxSize()
+        .combinedClickable(
+          onClick = {
+            if (isDeleteMode) {
+              onItemSelectedToDelete()
+            } else {
+              onItemClick()
+            }
+          },
+          onLongClick = onLongClick
+        )
+    ) {
+      Text(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(all = 16.dp),
+        text = todoList.name,
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.Bold,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1
+      )
+    }
   }
 }
 

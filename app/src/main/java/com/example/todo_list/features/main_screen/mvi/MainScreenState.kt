@@ -7,5 +7,6 @@ data class MainScreenState(
   val isLoading: Boolean = false,
   val showNewListBottomSheet: Boolean = false,
   val listToEdit: TodoList? = null,
-  val displayMenu: Boolean = false
+  val displayMenu: Boolean = false,
+  val isDeleteMode: Boolean = false
 )

@@ -58,9 +58,42 @@ class MainScreenViewModel @Inject constructor(
         }
       }
 
-      is MainScreenEvent.TodoListDeleted -> {
+      is MainScreenEvent.TodoListsDeleted -> {
         viewModelScope.launch {
-          todoListRepository.deleteListById(listId = event.todoList.id)
+          withContext(Dispatchers.IO) {
+            val idList = uiState.value.todoLists.filter { it.isSelectedToDelete }.map { it.id }
+            todoListRepository.deleteListsById(idList)
+          }
+          withContext(Dispatchers.Main) {
+            _uiState.update { it.copy(isDeleteMode = false) }
+          }
+        }
+      }
+
+      is MainScreenEvent.DeleteModeEnabled -> {
+        if (!event.isEnabled) {
+          _uiState.update {
+            it.copy(
+              isDeleteMode = false,
+              todoLists = it.todoLists.map { list -> list.copy(isSelectedToDelete = false) }
+            )
+          }
+        } else {
+          _uiState.update { it.copy(isDeleteMode = true) }
+        }
+      }
+
+      is MainScreenEvent.TodoListSelectedToDelete -> {
+        _uiState.update {
+          it.copy(
+            todoLists = it.todoLists.map { list ->
+              if (list.id == event.todoList.id) {
+                list.copy(isSelectedToDelete = !list.isSelectedToDelete)
+              } else {
+                list
+              }
+            }
+          )
         }
       }
     }
