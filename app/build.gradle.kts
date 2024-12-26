@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.ksp)
+  alias(libs.plugins.hilt)
 }
 
 android {
@@ -62,9 +63,17 @@ dependencies {
   implementation(libs.androidx.material3)
   implementation(libs.androidx.material.icons)
   implementation(libs.reorderable)
-  implementation(libs.bundles.room)
   implementation(libs.datastore.preferences)
+  implementation(libs.androidx.navigation)
+
+  // Room
+  implementation(libs.bundles.room)
   ksp(libs.room.compiler)
+
+  // Hilt
+  implementation(libs.hilt)
+  ksp(libs.hilt.compiler)
+  implementation(libs.hilt.navigation.compose)
 
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)

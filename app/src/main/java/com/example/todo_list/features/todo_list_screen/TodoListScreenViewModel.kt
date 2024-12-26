@@ -1,7 +1,6 @@
 package com.example.todo_list.features.todo_list_screen
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.todo_list.data.data_store.DataStoreManager
 import com.example.todo_list.data.entities.TodoTaskEntity
@@ -9,6 +8,7 @@ import com.example.todo_list.data.repository.TodoTaskRepository
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,8 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class TodoListScreenViewModel(
+@HiltViewModel
+class TodoListScreenViewModel @Inject constructor(
   private val todoTaskRepository: TodoTaskRepository,
   private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
@@ -190,17 +192,4 @@ class TodoListScreenViewModel(
   }
 
   // endregion
-}
-
-class TodoListScreenViewModelFactory(
-  private val repository: TodoTaskRepository,
-  private val dataStoreManager: DataStoreManager
-) : ViewModelProvider.Factory {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(TodoListScreenViewModel::class.java)) {
-      @Suppress("UNCHECKED_CAST")
-      return TodoListScreenViewModel(repository, dataStoreManager) as T
-    }
-    throw IllegalArgumentException("Unknown ViewModel class")
-  }
 }

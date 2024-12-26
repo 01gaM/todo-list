@@ -1,13 +1,13 @@
 package com.example.todo_list.features.main_screen
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.todo_list.data.entities.TodoListEntity
 import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.features.main_screen.model.TodoList
 import com.example.todo_list.features.main_screen.mvi.MainScreenEvent
 import com.example.todo_list.features.main_screen.mvi.MainScreenState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +18,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class MainScreenViewModel(private val todoListRepository: TodoListRepository) : ViewModel() {
+@HiltViewModel
+class MainScreenViewModel @Inject constructor(
+  private val todoListRepository: TodoListRepository
+) : ViewModel() {
   private val _uiState = MutableStateFlow(MainScreenState())
   val uiState: StateFlow<MainScreenState> = _uiState.asStateFlow()
 
@@ -59,10 +63,6 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
           todoListRepository.deleteListById(listId = event.todoList.id)
         }
       }
-
-      is MainScreenEvent.TodoListClicked -> {
-        // TODO: navigate to list screen
-      }
     }
   }
 
@@ -85,16 +85,4 @@ class MainScreenViewModel(private val todoListRepository: TodoListRepository) : 
   }
 
   // endregion
-}
-
-class MainScreenViewModelFactory(
-  private val repository: TodoListRepository
-) : ViewModelProvider.Factory {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(MainScreenViewModel::class.java)) {
-      @Suppress("UNCHECKED_CAST")
-      return MainScreenViewModel(repository) as T
-    }
-    throw IllegalArgumentException("Unknown ViewModel class")
-  }
 }

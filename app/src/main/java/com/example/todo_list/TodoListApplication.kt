@@ -4,9 +4,11 @@ import android.app.Application
 import com.example.todo_list.data.TodoListDatabase
 import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.data.repository.TodoTaskRepository
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
+@HiltAndroidApp
 class TodoListApplication: Application() {
   val applicationScope = CoroutineScope(SupervisorJob())
 
