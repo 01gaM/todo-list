@@ -33,7 +33,7 @@ fun TodoListItem(
   taskName: String,
   isCompleted: Boolean,
   isReorderingMode: Boolean = false,
-  onClick: () -> Unit
+  onClick: () -> Unit = {}
 ) {
   val capitalizedName = remember(taskName) {
     taskName.replaceFirstChar {
@@ -107,7 +107,7 @@ fun TodoListItem(
 @Composable
 private fun TodoListItemPreview() {
   ToDoListTheme {
-    TodoListItem(taskIndex = 1, taskName = "Some task", isCompleted = false, onClick = {})
+    TodoListItem(taskIndex = 1, taskName = "Some task", isCompleted = false)
   }
 }
 
@@ -120,8 +120,7 @@ private fun TodoListItemCompletedPreview() {
     TodoListItem(
       taskIndex = 1,
       taskName = "Some task",
-      isCompleted = true,
-      onClick = {}
+      isCompleted = true
     )
   }
 }
@@ -134,8 +133,7 @@ private fun TodoListItemIndex99Preview() {
     TodoListItem(
       taskIndex = 99,
       taskName = "Some task",
-      isCompleted = false,
-      onClick = {}
+      isCompleted = false
     )
   }
 }

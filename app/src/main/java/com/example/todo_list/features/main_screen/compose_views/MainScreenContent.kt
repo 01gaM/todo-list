@@ -140,7 +140,7 @@ fun MainScreenContent(
               TodoListView(
                 name = item.name,
                 onItemClick = {
-                  navController?.navigate(Screen.TodoList.route) // TODO: pass list id
+                  navController?.navigate(Screen.TodoList.route.plus("/${item.id}"))
                 }
               )
             }

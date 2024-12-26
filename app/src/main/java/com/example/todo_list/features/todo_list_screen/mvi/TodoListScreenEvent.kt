@@ -3,7 +3,7 @@ package com.example.todo_list.features.todo_list_screen.mvi
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 
 sealed interface TodoListScreenEvent {
-  data class TaskClicked(val index: Int) : TodoListScreenEvent
+  data class TaskClicked(val taskId: Int) : TodoListScreenEvent
   data class TaskDeleted(val task: TodoTask) : TodoListScreenEvent
   data class TaskMoved(val fromIndex: Int, val toIndex: Int) : TodoListScreenEvent
 

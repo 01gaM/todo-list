@@ -8,9 +8,11 @@ import com.example.todo_list.data.repository.TodoTaskRepository
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,22 +22,24 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
-@HiltViewModel
-class TodoListScreenViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = TodoListScreenViewModel.TodoListScreenViewModelFactory::class)
+class TodoListScreenViewModel @AssistedInject constructor(
   private val todoTaskRepository: TodoTaskRepository,
-  private val dataStoreManager: DataStoreManager
+  private val dataStoreManager: DataStoreManager,
+  @Assisted private val listId: Int
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(TodoListScreenState())
   val uiState: StateFlow<TodoListScreenState> = _uiState.asStateFlow()
 
+  @AssistedFactory
+  interface TodoListScreenViewModelFactory {
+    fun create(listId: Int): TodoListScreenViewModel
+  }
+
   init {
     _uiState.update { it.copy(isLoading = true) }
     viewModelScope.launch {
-      // fake delay to show loading animation for demo purposes
-      delay(timeMillis = TimeUnit.SECONDS.toMillis(2))
       bindUiStateToData()
     }
   }
@@ -56,13 +60,13 @@ class TodoListScreenViewModel @Inject constructor(
         _uiState.update { it.copy(displayMenu = !it.displayMenu) }
       }
 
-      is TodoListScreenEvent.TaskClicked -> handleTaskClicked(event.index)
+      is TodoListScreenEvent.TaskClicked -> handleTaskClicked(event.taskId)
 
       is TodoListScreenEvent.AllTasksDeleted -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-          todoTaskRepository.deleteAll()
-            }
+            todoTaskRepository.deleteAll()
+          }
         }
       }
 
@@ -102,7 +106,10 @@ class TodoListScreenViewModel @Inject constructor(
       is TodoListScreenEvent.ReorderTasksCompleted -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            todoTaskRepository.updateTasksIndexes(updatedList = uiState.value.reorderingModeTaskList)
+            todoTaskRepository.updateTasksIndexes(
+              listId = listId,
+              updatedList = uiState.value.reorderingModeTaskList
+            )
             withContext(context = Dispatchers.Main) {
               _uiState.update { it.copy(isReorderingMode = false) }
             }
@@ -113,7 +120,7 @@ class TodoListScreenViewModel @Inject constructor(
       is TodoListScreenEvent.TasksShuffled -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            todoTaskRepository.shuffleIndexes()
+            todoTaskRepository.shuffleIndexes(listId = listId)
           }
         }
       }
@@ -135,17 +142,18 @@ class TodoListScreenViewModel @Inject constructor(
           TodoTaskEntity(
             taskIndex = uiState.value.taskList.size,
             taskName = taskName,
-            isCompleted = false
+            isCompleted = false,
+            listId = listId
           )
         )
       }
     }
   }
 
-  private fun handleTaskClicked(index: Int) {
+  private fun handleTaskClicked(taskId: Int) {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
-        todoTaskRepository.getTaskAtIndex(index)?.let {
+        todoTaskRepository.getTaskById(taskId)?.let {
           todoTaskRepository.updateTaskCompleted(taskId = it.uid, isCompleted = !it.isCompleted)
           if (uiState.value.isDeleteCompletedChecked && !it.isCompleted) {
             todoTaskRepository.deleteTaskById(it.uid)
@@ -173,7 +181,7 @@ class TodoListScreenViewModel @Inject constructor(
   }
 
   private suspend fun bindUiStateToData() {
-    todoTaskRepository.allTasks.combine(
+    todoTaskRepository.getTasksByListId(listId).combine(
       dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
       transform = { tasks, isDeleteCompletedChecked ->
         uiState.value.copy(

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.BottomAppBar
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.todo_list.R
 import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import com.example.todo_list.common.ui.compose_views.SwipeActionContainer
@@ -56,6 +58,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun TodoListScreenContent(
   modifier: Modifier = Modifier,
+  navController: NavController?,
   state: TodoListScreenState,
   onEvent: (TodoListScreenEvent) -> Unit = {}
 ) {
@@ -83,6 +86,19 @@ fun TodoListScreenContent(
         },
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
+        navigationIcon = {
+          IconButton(
+            modifier = Modifier.padding(all = 16.dp),
+            onClick = { navController?.navigateUp() },
+            content = {
+              Icon(
+                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                contentDescription = "Back icon",
+                tint = MaterialTheme.colorScheme.onPrimary,
+              )
+            }
+          )
+        },
         actions = {
           AnimatedVisibility(
             visible = !state.isReorderingMode,
@@ -202,8 +218,7 @@ fun TodoListScreenContent(
                     taskIndex = index + 1,
                     taskName = item.name,
                     isCompleted = item.isCompleted,
-                    isReorderingMode = true,
-                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(index)) }
+                    isReorderingMode = true
                   )
                 }
               }
@@ -223,7 +238,7 @@ fun TodoListScreenContent(
                     taskName = item.name,
                     isCompleted = item.isCompleted,
                     isReorderingMode = false,
-                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(index)) }
+                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(item.id)) }
                   )
                 }
               }
@@ -265,6 +280,7 @@ fun TodoListScreenContent(
 private fun TodoListScreenContentPreview() {
   ToDoListTheme {
     TodoListScreenContent(
+      navController = null,
       state = TodoListScreenState(taskList = remember {
         mutableStateListOf(
           TodoTask(name = "task1", id = 1),

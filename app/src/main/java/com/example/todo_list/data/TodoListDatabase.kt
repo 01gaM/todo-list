@@ -1,6 +1,7 @@
 package com.example.todo_list.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -11,8 +12,9 @@ import com.example.todo_list.data.entities.TodoTaskEntity
 import kotlinx.coroutines.CoroutineScope
 
 @Database(
-  version = 2,
-  entities = [TodoTaskEntity::class, TodoListEntity::class]
+  version = 3,
+  entities = [TodoTaskEntity::class, TodoListEntity::class],
+  autoMigrations = [AutoMigration(from = 2, to = 3)]
 )
 abstract class TodoListDatabase : RoomDatabase() {
   abstract fun todoTaskDao(): TodoTaskDao

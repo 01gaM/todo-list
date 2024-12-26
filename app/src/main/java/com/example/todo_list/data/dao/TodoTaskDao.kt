@@ -9,14 +9,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TodoTaskDao {
-  @Query("SELECT * FROM todo_task")
-  fun getAll(): Flow<List<TodoTaskEntity>>
+  @Query("SELECT * FROM todo_task WHERE list_id LIKE :id")
+  fun findByListId(id: Int): Flow<List<TodoTaskEntity>>
 
   @Query("SELECT * FROM todo_task WHERE uid LIKE :id LIMIT 1")
-  fun findById(id: Int): TodoTaskEntity?
-
-  @Query("SELECT * FROM todo_task WHERE task_index LIKE :index LIMIT 1")
-  fun findByIndex(index: Int): TodoTaskEntity?
+  fun findByTaskId(id: Int): TodoTaskEntity?
 
   @Insert
   fun insert(task: TodoTaskEntity)

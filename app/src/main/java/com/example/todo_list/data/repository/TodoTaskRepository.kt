@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.first
 
 
 class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
-
-  val allTasks: Flow<List<TodoTaskEntity>> = todoTaskDao.getAll()
+  @WorkerThread
+  fun getTasksByListId(listId: Int): Flow<List<TodoTaskEntity>> = todoTaskDao.findByListId(listId)
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
@@ -21,10 +21,13 @@ class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
 
   @WorkerThread
   suspend fun deleteTaskById(taskId: Int) {
-    val task = todoTaskDao.findById(id = taskId)
+    val task = todoTaskDao.findByTaskId(id = taskId)
     if (task != null) {
       todoTaskDao.delete(task)
-      updateTasksIndexesAfterDeletion(deletedIndex = task.taskIndex)
+      updateTasksIndexesAfterDeletion(
+        listId = task.listId,
+        deletedIndex = task.taskIndex
+      )
     } else {
       Log.e(javaClass.simpleName, "Task with id \"$taskId\" not found")
     }
@@ -35,8 +38,8 @@ class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
   suspend fun deleteAll() = todoTaskDao.deleteAll()
 
   @WorkerThread
-  suspend fun shuffleIndexes() {
-    val tasks = todoTaskDao.getAll().first()
+  suspend fun shuffleIndexes(listId: Int) {
+    val tasks = todoTaskDao.findByListId(listId).first()
     val shuffledTasksIndexes = tasks.shuffled().map { it.taskIndex }
     for (index in tasks.indices) {
       todoTaskDao.updateTaskIndex(
@@ -48,7 +51,7 @@ class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
-  suspend fun getTaskAtIndex(index: Int): TodoTaskEntity? = todoTaskDao.findByIndex(index = index)
+  suspend fun getTaskById(id: Int): TodoTaskEntity? = todoTaskDao.findByTaskId(id = id)
 
   @Suppress("RedundantSuspendModifier")
   @WorkerThread
@@ -57,8 +60,8 @@ class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
   }
 
   @WorkerThread
-  suspend fun updateTasksIndexes(updatedList: List<TodoTask>) {
-    val oldList = todoTaskDao.getAll().first()
+  suspend fun updateTasksIndexes(listId: Int, updatedList: List<TodoTask>) {
+    val oldList = todoTaskDao.findByListId(listId).first()
     updatedList.forEachIndexed { index, todoTask ->
       val oldIndex = oldList.find { it.uid == todoTask.id }?.taskIndex
       if (oldIndex != index) {
@@ -82,9 +85,9 @@ class TodoTaskRepository(private val todoTaskDao: TodoTaskDao) {
   // region private
 
   @WorkerThread
-  private suspend fun updateTasksIndexesAfterDeletion(deletedIndex: Int) {
+  private suspend fun updateTasksIndexesAfterDeletion(listId: Int, deletedIndex: Int) {
     // Move all tasks indexes after the deleted task on one position
-    todoTaskDao.getAll().first()
+    todoTaskDao.findByListId(listId).first()
       .sortedBy { it.taskIndex }
       .drop(deletedIndex)
       .forEach {
