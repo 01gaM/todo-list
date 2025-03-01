@@ -4,10 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -32,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -40,8 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todo_list.R
@@ -74,12 +75,10 @@ fun TodoListScreenContent(
       .background(color = MaterialTheme.colorScheme.background)
       .navigationBarsPadding(),
     topBar = {
-      TopAppBar(
+      CenterAlignedTopAppBar(
         title = {
           Text(
-            modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.app_name),
-            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
           )
@@ -87,23 +86,31 @@ fun TodoListScreenContent(
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
         navigationIcon = {
-          IconButton(
-            modifier = Modifier.padding(all = 16.dp),
-            onClick = { navController?.navigateUp() },
-            content = {
-              Icon(
-                imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                contentDescription = "Back icon",
-                tint = MaterialTheme.colorScheme.onPrimary,
-              )
-            }
-          )
-        },
-        actions = {
+          val animationOffset = { size: IntSize -> IntOffset(-size.width, 0) }
           AnimatedVisibility(
             visible = !state.isReorderingMode,
-            enter = expandIn(),
-            exit = shrinkOut()
+            enter = slideIn(initialOffset = animationOffset),
+            exit = slideOut(targetOffset = animationOffset)
+          ) {
+            IconButton(
+              modifier = Modifier.padding(all = 16.dp),
+              onClick = { navController?.navigateUp() },
+              content = {
+                Icon(
+                  imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                  contentDescription = "Back icon",
+                  tint = MaterialTheme.colorScheme.onPrimary,
+                )
+              }
+            )
+          }
+        },
+        actions = {
+          val animationOffset = { size: IntSize -> IntOffset(size.width, 0) }
+          AnimatedVisibility(
+            visible = !state.isReorderingMode,
+            enter = slideIn(initialOffset = animationOffset),
+            exit = slideOut(targetOffset = animationOffset)
           ) {
             IconButton(
               onClick = { onEvent(TodoListScreenEvent.MenuClicked) },

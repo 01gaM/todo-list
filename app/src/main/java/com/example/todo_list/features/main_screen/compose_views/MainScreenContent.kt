@@ -3,8 +3,11 @@ package com.example.todo_list.features.main_screen.compose_views
 import com.example.todo_list.features.todo_list_screen.compose_views.EmptyTodoListContent
 import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -25,6 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -33,7 +37,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todo_list.R
@@ -71,12 +76,10 @@ fun MainScreenContent(
       .background(color = MaterialTheme.colorScheme.background)
       .navigationBarsPadding(),
     topBar = {
-      TopAppBar(
+      CenterAlignedTopAppBar (
         title = {
           Text(
-            modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.app_name),
-            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
           )
@@ -84,7 +87,12 @@ fun MainScreenContent(
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
         navigationIcon = {
-          if (state.isDeleteMode) {
+          val animationOffset = { size: IntSize -> IntOffset(-size.width, 0) }
+          AnimatedVisibility(
+            visible = state.isDeleteMode,
+            enter = slideIn(initialOffset = animationOffset),
+            exit = slideOut(targetOffset = animationOffset)
+          ) {
             IconButton(
               onClick = { onEvent(MainScreenEvent.DeleteModeEnabled(isEnabled = false)) },
               content = {
@@ -98,7 +106,12 @@ fun MainScreenContent(
           }
         },
         actions = {
-          if (state.isDeleteMode) {
+          val animationOffset = { size: IntSize -> IntOffset(size.width, 0) }
+          AnimatedVisibility(
+            visible = state.isDeleteMode,
+            enter = slideIn(initialOffset = animationOffset),
+            exit = slideOut(targetOffset = animationOffset)
+          ) {
             IconButton(
               onClick = { onEvent(MainScreenEvent.TodoListsDeleted) },
               content = {
@@ -114,7 +127,12 @@ fun MainScreenContent(
       )
     },
     floatingActionButton = {
-      if (!state.isDeleteMode) {
+      val animationOffset = { size: IntSize -> IntOffset(0, size.height * 2) }
+      AnimatedVisibility(
+        visible = !state.isDeleteMode,
+        enter = slideIn(initialOffset = animationOffset),
+        exit = slideOut(targetOffset = animationOffset)
+      ) {
         FloatingActionButton(
           shape = CircleShape,
           content = {
