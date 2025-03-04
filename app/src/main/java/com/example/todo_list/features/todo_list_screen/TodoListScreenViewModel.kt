@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todo_list.data.data_store.DataStoreManager
 import com.example.todo_list.data.entities.TodoTaskEntity
+import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.data.repository.TodoTaskRepository
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
@@ -13,6 +14,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +28,7 @@ import kotlinx.coroutines.withContext
 @HiltViewModel(assistedFactory = TodoListScreenViewModel.TodoListScreenViewModelFactory::class)
 class TodoListScreenViewModel @AssistedInject constructor(
   private val todoTaskRepository: TodoTaskRepository,
+  private val todoListRepository: TodoListRepository,
   private val dataStoreManager: DataStoreManager,
   @Assisted private val listId: Int
 ) : ViewModel() {
@@ -181,12 +184,16 @@ class TodoListScreenViewModel @AssistedInject constructor(
   }
 
   private suspend fun bindUiStateToData() {
+    val listName = viewModelScope.async(Dispatchers.IO) {
+      todoListRepository.getListById(listId)?.listName ?: ""
+    }
     todoTaskRepository.getTasksByListId(listId).combine(
       dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
       transform = { tasks, isDeleteCompletedChecked ->
         uiState.value.copy(
           isLoading = false,
           isDeleteCompletedChecked = isDeleteCompletedChecked,
+          taskListName = listName.await(),
           taskList = tasks.sortedBy { it.taskIndex }.map { task ->
             TodoTask(
               id = task.uid,

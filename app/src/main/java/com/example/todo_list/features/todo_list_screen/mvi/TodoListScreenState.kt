@@ -3,6 +3,7 @@ package com.example.todo_list.features.todo_list_screen.mvi
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 
 data class TodoListScreenState(
+  val taskListName: String = "",
   val taskList: List<TodoTask> = emptyList(),
   val reorderingModeTaskList: List<TodoTask> = emptyList(),
   val isReorderingMode: Boolean = false,

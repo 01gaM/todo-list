@@ -77,7 +77,7 @@ fun TodoListScreenContent(
       CenterAlignedTopAppBar(
         title = {
           Text(
-            text = stringResource(R.string.app_name),
+            text = state.taskListName,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
           )
