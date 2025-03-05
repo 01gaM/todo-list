@@ -1,7 +1,6 @@
 package com.example.todo_list.features.todo_list_screen.compose_views
 
 import android.content.res.Configuration
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -80,22 +79,17 @@ fun TodoListItem(
       }
     )
 
-    Crossfade(
-      targetState = isReorderingMode,
-      label = "cross_fade_reorder_icon"
-    ) { isReordering ->
-      if (isReordering) {
-        Icon(
-          imageVector = Icons.Default.DragHandle,
-          contentDescription = "Drag handle icon",
-          tint = MaterialTheme.colorScheme.primary
-        )
-      } else {
-        Checkbox(
-          checked = isCompleted,
-          onCheckedChange = null
-        )
-      }
+    if (isReorderingMode) {
+      Icon(
+        imageVector = Icons.Default.DragHandle,
+        contentDescription = "Drag handle icon",
+        tint = MaterialTheme.colorScheme.primary
+      )
+    } else {
+      Checkbox(
+        checked = isCompleted,
+        onCheckedChange = null
+      )
     }
   }
 }

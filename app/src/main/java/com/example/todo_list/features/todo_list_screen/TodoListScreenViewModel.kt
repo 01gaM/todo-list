@@ -8,6 +8,7 @@ import com.example.todo_list.data.repository.TodoListRepository
 import com.example.todo_list.data.repository.TodoTaskRepository
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenMode
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,7 +42,7 @@ class TodoListScreenViewModel @AssistedInject constructor(
   }
 
   init {
-    _uiState.update { it.copy(isLoading = true) }
+    _uiState.update { it.copy(contentMode = TodoListScreenMode.Loading) }
     viewModelScope.launch {
       bindUiStateToData()
     }
@@ -95,13 +96,17 @@ class TodoListScreenViewModel @AssistedInject constructor(
         _uiState.update { it.copy(taskToEdit = event.task) }
       }
 
-      is TodoListScreenEvent.TaskMoved -> handleTaskMoved(event.fromIndex, event.toIndex)
+      is TodoListScreenEvent.TaskMoved -> handleTaskMoved(
+        event.fromIndex,
+        event.toIndex
+      )
 
       is TodoListScreenEvent.ReorderTasksClicked -> {
         _uiState.update {
           it.copy(
-            reorderingModeTaskList = it.taskList,
-            isReorderingMode = true
+            contentMode = TodoListScreenMode.Reordering(
+              reorderingModeTaskList = it.taskList
+            )
           )
         }
       }
@@ -111,10 +116,10 @@ class TodoListScreenViewModel @AssistedInject constructor(
           withContext(Dispatchers.IO) {
             todoTaskRepository.updateTasksIndexes(
               listId = listId,
-              updatedList = uiState.value.reorderingModeTaskList
+              updatedList = event.newTaskList
             )
             withContext(context = Dispatchers.Main) {
-              _uiState.update { it.copy(isReorderingMode = false) }
+              _uiState.update { it.copy(contentMode = TodoListScreenMode.ViewList) }
             }
           }
         }
@@ -174,12 +179,18 @@ class TodoListScreenViewModel @AssistedInject constructor(
     }
   }
 
-  private fun handleTaskMoved(fromIndex: Int, toIndex: Int) {
-    _uiState.update {
-      val newList = it.reorderingModeTaskList.toMutableList()
-      val item = newList.removeAt(fromIndex)
-      newList.add(toIndex, item)
-      it.copy(reorderingModeTaskList = newList)
+  private fun handleTaskMoved(
+    fromIndex: Int,
+    toIndex: Int
+  ) {
+    val currentMode = uiState.value.contentMode
+    if (currentMode is TodoListScreenMode.Reordering) {
+      _uiState.update {
+        val newList = currentMode.reorderingModeTaskList.toMutableList()
+        val item = newList.removeAt(fromIndex)
+        newList.add(toIndex, item)
+        it.copy(contentMode = TodoListScreenMode.Reordering(reorderingModeTaskList = newList))
+      }
     }
   }
 
@@ -191,7 +202,7 @@ class TodoListScreenViewModel @AssistedInject constructor(
       dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
       transform = { tasks, isDeleteCompletedChecked ->
         uiState.value.copy(
-          isLoading = false,
+          contentMode = TodoListScreenMode.ViewList,
           isDeleteCompletedChecked = isDeleteCompletedChecked,
           taskListName = listName.await(),
           taskList = tasks.sortedBy { it.taskIndex }.map { task ->

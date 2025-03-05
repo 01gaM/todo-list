@@ -2,7 +2,6 @@ package com.example.todo_list.features.todo_list_screen.compose_views
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideIn
@@ -33,7 +32,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ import com.example.todo_list.common.ui.compose_views.SwipeActionContainer
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.common.ui.theme.ToDoListTheme
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
+import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenMode
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -64,8 +66,21 @@ fun TodoListScreenContent(
 ) {
   val isTaskListEmpty = remember(state.taskList) { state.taskList.isEmpty() }
   val lazyListState = rememberLazyListState()
+  val reorderedTaskList by remember(state.contentMode) {
+    mutableStateOf(
+      if (state.contentMode is TodoListScreenMode.Reordering)
+        state.contentMode.reorderingModeTaskList
+      else
+        emptyList()
+    )
+  }
   val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-    onEvent(TodoListScreenEvent.TaskMoved(from.index, to.index))
+    onEvent(
+      TodoListScreenEvent.TaskMoved(
+        from.index,
+        to.index
+      )
+    )
   }
 
   Scaffold(
@@ -87,7 +102,7 @@ fun TodoListScreenContent(
         navigationIcon = {
           val animationOffset = { size: IntSize -> IntOffset(-size.width, 0) }
           AnimatedVisibility(
-            visible = !state.isReorderingMode,
+            visible = state.contentMode !is TodoListScreenMode.Reordering,
             enter = slideIn(initialOffset = animationOffset),
             exit = slideOut(targetOffset = animationOffset)
           ) {
@@ -107,7 +122,7 @@ fun TodoListScreenContent(
         actions = {
           val animationOffset = { size: IntSize -> IntOffset(size.width, 0) }
           AnimatedVisibility(
-            visible = !state.isReorderingMode,
+            visible = state.contentMode !is TodoListScreenMode.Reordering,
             enter = slideIn(initialOffset = animationOffset),
             exit = slideOut(targetOffset = animationOffset)
           ) {
@@ -149,7 +164,7 @@ fun TodoListScreenContent(
     floatingActionButton = {
       val animationOffset = { size: IntSize -> IntOffset(0, -size.height) }
       AnimatedVisibility(
-        visible = !state.isReorderingMode,
+        visible = state.contentMode !is TodoListScreenMode.Reordering,
         enter = slideIn(initialOffset = animationOffset) + scaleIn(),
         exit = slideOut(targetOffset = animationOffset) + scaleOut()
       ) {
@@ -166,82 +181,85 @@ fun TodoListScreenContent(
       }
     }
   ) { innerPadding ->
-    if (state.isLoading) {
-      Box(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(innerPadding),
-        contentAlignment = Alignment.Center
-      ) { CircularProgressIndicator() }
-    } else {
-      Crossfade(
-        targetState = isTaskListEmpty,
-        label = "cross_fade_empty_list"
-      ) { isListEmpty ->
-        if (isListEmpty) {
-          EmptyTodoListContent(
-            modifier = Modifier
-              .padding(paddingValues = innerPadding)
-              .fillMaxSize(),
-            title = stringResource(R.string.todo_list_screen_empty_list_title),
-            description = stringResource(R.string.todo_list_screen_empty_list_description)
-          )
-        } else {
-          Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding),
+      contentAlignment = Alignment.Center
+    ) {
+      when (state.contentMode) { // TODO: add animated content
+        TodoListScreenMode.Loading -> {
+          CircularProgressIndicator()
+        }
+
+        is TodoListScreenMode.Reordering -> {
+          LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState
+          ) {
+            itemsIndexed(
+              items = state.contentMode.reorderingModeTaskList,
+              key = { _, task -> task.id }
+            ) { index, item ->
+              ReorderableItem(
+                state = reorderableLazyListState,
+                key = item.id
+              ) { _ ->
+                TodoListItem(
+                  modifier = Modifier.draggableHandle(),
+                  taskIndex = index + 1,
+                  taskName = item.name,
+                  isCompleted = item.isCompleted,
+                  isReorderingMode = true
+                )
+              }
+            }
+          }
+        }
+
+        TodoListScreenMode.ViewList -> {
+          if (isTaskListEmpty) {
+            EmptyTodoListContent(
+              modifier = Modifier
+                .padding(paddingValues = innerPadding)
+                .fillMaxSize(),
+              title = stringResource(R.string.todo_list_screen_empty_list_title),
+              description = stringResource(R.string.todo_list_screen_empty_list_description)
+            )
+          } else {
             LazyColumn(
               modifier = Modifier.fillMaxSize(),
               state = lazyListState
             ) {
-              if (state.isReorderingMode) {
-                itemsIndexed(
-                  items = state.reorderingModeTaskList,
-                  key = { _, task -> task.id.toString() + task.name }
-                ) { index, item ->
-                  ReorderableItem(
-                    state = reorderableLazyListState,
-                    key = item.id.toString() + item.name
-                  ) { _ ->
-                    TodoListItem(
-                      modifier = Modifier.draggableHandle(),
-                      taskIndex = index + 1,
-                      taskName = item.name,
-                      isCompleted = item.isCompleted,
-                      isReorderingMode = true
-                    )
-                  }
-                }
-              } else {
-                itemsIndexed(
-                  items = state.taskList,
-                  key = { _, task -> task.id.toString() + task.name }
-                ) { index, item ->
-                  SwipeActionContainer(
-                    modifier = Modifier.animateItem(),
-                    item = item,
-                    onDelete = { onEvent(TodoListScreenEvent.TaskDeleted(item)) },
-                    onEdit = { onEvent(TodoListScreenEvent.EditTaskSelected(item)) }
-                  ) {
-                    TodoListItem(
-                      taskIndex = index + 1,
-                      taskName = item.name,
-                      isCompleted = item.isCompleted,
-                      isReorderingMode = false,
-                      onClick = { onEvent(TodoListScreenEvent.TaskClicked(item.id)) }
-                    )
-                  }
+              itemsIndexed(
+                items = state.taskList,
+                key = { _, task -> task.id }
+              ) { index, item ->
+                SwipeActionContainer(
+                  modifier = Modifier.animateItem(),
+                  item = item,
+                  onDelete = { onEvent(TodoListScreenEvent.TaskDeleted(item)) },
+                  onEdit = { onEvent(TodoListScreenEvent.EditTaskSelected(item)) }
+                ) {
+                  TodoListItem(
+                    taskIndex = index + 1,
+                    taskName = item.name,
+                    isCompleted = item.isCompleted,
+                    isReorderingMode = false,
+                    onClick = { onEvent(TodoListScreenEvent.TaskClicked(item.id)) }
+                  )
                 }
               }
             }
-            SaveOrderButton(
-              modifier = Modifier.align(alignment = Alignment.BottomCenter),
-              isReorderingMode = state.isReorderingMode,
-              onClick = { onEvent(TodoListScreenEvent.ReorderTasksCompleted) }
-            )
           }
         }
       }
+
+      SaveOrderButton(
+        modifier = Modifier.align(alignment = Alignment.BottomCenter),
+        isVisible = state.contentMode is TodoListScreenMode.Reordering,
+        onClick = { onEvent(TodoListScreenEvent.ReorderTasksCompleted(reorderedTaskList)) }
+      )
     }
   }
 
@@ -273,13 +291,13 @@ fun TodoListScreenContent(
 @Composable
 private fun SaveOrderButton(
   modifier: Modifier = Modifier,
-  isReorderingMode: Boolean,
+  isVisible: Boolean,
   onClick: () -> Unit
 ) {
   val animationOffset = { size: IntSize -> IntOffset(0, size.height) }
   AnimatedVisibility(
     modifier = modifier,
-    visible = isReorderingMode,
+    visible = isVisible,
     enter = slideIn(initialOffset = animationOffset),
     exit = slideOut(targetOffset = animationOffset)
   ) {

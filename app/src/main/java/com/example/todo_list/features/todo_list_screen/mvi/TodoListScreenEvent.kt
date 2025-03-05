@@ -7,7 +7,7 @@ sealed interface TodoListScreenEvent {
   data class TaskDeleted(val task: TodoTask) : TodoListScreenEvent
   data class TaskMoved(val fromIndex: Int, val toIndex: Int) : TodoListScreenEvent
 
-  data object AddNewTaskFabClicked: TodoListScreenEvent
+  data object AddNewTaskFabClicked : TodoListScreenEvent
   data class NewTaskAdded(val newTaskName: String) : TodoListScreenEvent
   data object AddNewTaskBottomSheetDismissed : TodoListScreenEvent
 
@@ -19,7 +19,7 @@ sealed interface TodoListScreenEvent {
   data object MenuDismissed : TodoListScreenEvent
   data object AllTasksDeleted : TodoListScreenEvent
   data object ReorderTasksClicked : TodoListScreenEvent
-  data object ReorderTasksCompleted : TodoListScreenEvent
+  data class ReorderTasksCompleted(val newTaskList: List<TodoTask>) : TodoListScreenEvent
   data object TasksShuffled : TodoListScreenEvent
   data object DeleteCompletedCheckedChanged : TodoListScreenEvent
 }
