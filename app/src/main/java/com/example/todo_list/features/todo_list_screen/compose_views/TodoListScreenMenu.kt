@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -77,6 +78,8 @@ fun TodoListScreenMenu(
           CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
             Checkbox(
               checked = isDeleteCompletedChecked,
+              colors = CheckboxDefaults.colors()
+                .copy(uncheckedBorderColor = MaterialTheme.colorScheme.primary),
               onCheckedChange = null
             )
           }
