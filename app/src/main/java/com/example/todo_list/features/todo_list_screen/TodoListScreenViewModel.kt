@@ -67,18 +67,14 @@ class TodoListScreenViewModel @AssistedInject constructor(
       is TodoListScreenEvent.TaskClicked -> handleTaskClicked(event.taskId)
 
       is TodoListScreenEvent.AllTasksDeleted -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            todoTaskRepository.deleteAll()
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          todoTaskRepository.deleteAll()
         }
       }
 
       is TodoListScreenEvent.TaskDeleted -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            todoTaskRepository.deleteTaskById(event.task.id)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          todoTaskRepository.deleteTaskById(event.task.id)
         }
       }
 
@@ -111,25 +107,26 @@ class TodoListScreenViewModel @AssistedInject constructor(
         }
       }
 
-      is TodoListScreenEvent.ReorderTasksCompleted -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            todoTaskRepository.updateTasksIndexes(
-              listId = listId,
-              updatedList = event.newTaskList
-            )
-            withContext(context = Dispatchers.Main) {
-              _uiState.update { it.copy(contentMode = TodoListScreenMode.ViewList) }
-            }
+      is TodoListScreenEvent.ReorderTasksSaved -> {
+        viewModelScope.launch(Dispatchers.IO) {
+          todoTaskRepository.updateTasksIndexes(
+            listId = listId,
+            updatedList = event.newTaskList
+          )
+
+          withContext(Dispatchers.Main) {
+            _uiState.update { it.copy(contentMode = TodoListScreenMode.ViewList) }
           }
         }
       }
 
+      is TodoListScreenEvent.ReorderTasksCanceled -> {
+        _uiState.update { it.copy(contentMode = TodoListScreenMode.ViewList) }
+      }
+
       is TodoListScreenEvent.TasksShuffled -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            todoTaskRepository.shuffleIndexes(listId = listId)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          todoTaskRepository.shuffleIndexes(listId = listId)
         }
       }
 

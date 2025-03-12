@@ -8,10 +8,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -40,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -49,6 +48,7 @@ import androidx.navigation.NavController
 import com.example.todo_list.R
 import com.example.todo_list.common.ui.compose_views.NewItemBottomSheet
 import com.example.todo_list.common.ui.compose_views.SwipeActionContainer
+import com.example.todo_list.common.ui.compose_views.TodoListButton
 import com.example.todo_list.features.todo_list_screen.model.TodoTask
 import com.example.todo_list.common.ui.theme.ToDoListTheme
 import com.example.todo_list.features.todo_list_screen.mvi.TodoListScreenEvent
@@ -181,11 +181,11 @@ fun TodoListScreenContent(
       }
     }
   ) { innerPadding ->
-    Box(
+    Column(
       modifier = Modifier
         .fillMaxSize()
         .padding(innerPadding),
-      contentAlignment = Alignment.Center
+      verticalArrangement = Arrangement.Center
     ) {
       when (state.contentMode) {
         is TodoListScreenMode.Loading -> CircularProgressIndicator()
@@ -203,7 +203,7 @@ fun TodoListScreenContent(
         is TodoListScreenMode.Reordering,
         is TodoListScreenMode.ViewList -> {
           LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f),
             state = lazyListState
           ) {
             itemsIndexed(
@@ -248,10 +248,10 @@ fun TodoListScreenContent(
         }
       }
 
-      SaveOrderButton(
-        modifier = Modifier.align(alignment = Alignment.BottomCenter),
+      ReorderButtons(
         isVisible = state.contentMode is TodoListScreenMode.Reordering,
-        onClick = { onEvent(TodoListScreenEvent.ReorderTasksCompleted(visibleTaskList)) }
+        onSaveClicked = { onEvent(TodoListScreenEvent.ReorderTasksSaved(visibleTaskList)) },
+        onCancelClicked = { onEvent(TodoListScreenEvent.ReorderTasksCanceled) }
       )
     }
   }
@@ -282,10 +282,11 @@ fun TodoListScreenContent(
 // region private
 
 @Composable
-private fun SaveOrderButton(
+private fun ReorderButtons(
   modifier: Modifier = Modifier,
   isVisible: Boolean,
-  onClick: () -> Unit
+  onSaveClicked: () -> Unit,
+  onCancelClicked: () -> Unit
 ) {
   val animationOffset = { size: IntSize -> IntOffset(0, size.height) }
   AnimatedVisibility(
@@ -294,20 +295,24 @@ private fun SaveOrderButton(
     enter = slideIn(initialOffset = animationOffset),
     exit = slideOut(targetOffset = animationOffset)
   ) {
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .background(color = MaterialTheme.colorScheme.primary)
-        .clickable(onClick = onClick)
+    Row(
+      modifier = Modifier.padding(all = 16.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      Text(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(all = 16.dp),
+      TodoListButton(
+        modifier = Modifier.weight(1f),
+        text = stringResource(R.string.cancel).uppercase(),
+        textColor = MaterialTheme.colorScheme.error,
+        borderColor = MaterialTheme.colorScheme.error,
+        backgroundColor = MaterialTheme.colorScheme.background,
+        onClick = onCancelClicked
+      )
+
+      TodoListButton(
+        modifier = Modifier.weight(1f),
         text = stringResource(R.string.save).uppercase(),
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onPrimary,
-        textAlign = TextAlign.Center
+        onClick = onSaveClicked
       )
     }
   }
@@ -325,6 +330,33 @@ private fun TodoListScreenContentPreview() {
     TodoListScreenContent(
       navController = null,
       state = TodoListScreenState(
+        taskList = remember {
+          mutableStateListOf(
+            TodoTask(name = "task1", id = 1),
+            TodoTask(name = "task2", id = 2, isCompleted = true),
+            TodoTask(name = "task3", id = 3)
+          )
+        }
+      )
+    )
+  }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TodoListScreenReorderingPreview() {
+  ToDoListTheme {
+    TodoListScreenContent(
+      navController = null,
+      state = TodoListScreenState(
+        contentMode = TodoListScreenMode.Reordering(
+          listOf(
+            TodoTask(name = "task1", id = 1),
+            TodoTask(name = "task2", id = 2, isCompleted = true),
+            TodoTask(name = "task3", id = 3)
+          )
+        ),
         taskList = remember {
           mutableStateListOf(
             TodoTask(name = "task1", id = 1),

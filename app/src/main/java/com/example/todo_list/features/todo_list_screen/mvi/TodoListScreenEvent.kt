@@ -19,7 +19,8 @@ sealed interface TodoListScreenEvent {
   data object MenuDismissed : TodoListScreenEvent
   data object AllTasksDeleted : TodoListScreenEvent
   data object ReorderTasksClicked : TodoListScreenEvent
-  data class ReorderTasksCompleted(val newTaskList: List<TodoTask>) : TodoListScreenEvent
+  data class ReorderTasksSaved(val newTaskList: List<TodoTask>) : TodoListScreenEvent
+  data object ReorderTasksCanceled: TodoListScreenEvent
   data object TasksShuffled : TodoListScreenEvent
   data object DeleteCompletedCheckedChanged : TodoListScreenEvent
 }
