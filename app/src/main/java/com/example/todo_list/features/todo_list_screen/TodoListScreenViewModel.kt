@@ -199,10 +199,14 @@ class TodoListScreenViewModel @AssistedInject constructor(
       todoListRepository.getListById(listId)?.listName ?: ""
     }
     todoTaskRepository.getTasksByListId(listId).combine(
-      dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
+      flow = dataStoreManager.isDeleteCompletedCheckedFlow.distinctUntilChanged(),
       transform = { tasks, isDeleteCompletedChecked ->
         uiState.value.copy(
-          contentMode = TodoListScreenMode.ViewList,
+          contentMode = if (tasks.isEmpty()) {
+            TodoListScreenMode.EmptyList
+          } else {
+            TodoListScreenMode.ViewList
+          },
           isDeleteCompletedChecked = isDeleteCompletedChecked,
           taskListName = listName.await(),
           taskList = tasks.sortedBy { it.taskIndex }.map { task ->

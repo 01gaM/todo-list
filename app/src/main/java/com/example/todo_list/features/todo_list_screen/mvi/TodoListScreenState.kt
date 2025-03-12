@@ -13,7 +13,10 @@ data class TodoListScreenState(
 )
 
 sealed class TodoListScreenMode {
+  data object EmptyList: TodoListScreenMode()
   data object ViewList: TodoListScreenMode()
   data object Loading: TodoListScreenMode()
-  data class Reordering(val reorderingModeTaskList: List<TodoTask> = emptyList()): TodoListScreenMode()
+  data class Reordering(
+    val reorderingModeTaskList: List<TodoTask> = emptyList()
+  ): TodoListScreenMode()
 }
