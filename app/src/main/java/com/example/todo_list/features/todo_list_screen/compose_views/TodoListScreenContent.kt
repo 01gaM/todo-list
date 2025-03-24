@@ -3,10 +3,10 @@ package com.example.todo_list.features.todo_list_screen.compose_views
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todo_list.R
@@ -83,6 +82,18 @@ fun TodoListScreenContent(
     )
   }
 
+  val isReorderingMode by remember(state.contentMode) {
+    mutableStateOf(state.contentMode is TodoListScreenMode.Reordering)
+  }
+  val isScrollingUp by remember {
+    derivedStateOf {
+      lazyListState.lastScrolledBackward || lazyListState.firstVisibleItemIndex == 0
+    }
+  }
+  val isFabVisible by remember(isReorderingMode, isScrollingUp) {
+    derivedStateOf { !isReorderingMode && isScrollingUp }
+  }
+
   Scaffold(
     modifier = modifier
       .fillMaxSize()
@@ -100,11 +111,10 @@ fun TodoListScreenContent(
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
         navigationIcon = {
-          val animationOffset = { size: IntSize -> IntOffset(-size.width, 0) }
           AnimatedVisibility(
             visible = state.contentMode !is TodoListScreenMode.Reordering,
-            enter = slideIn(initialOffset = animationOffset),
-            exit = slideOut(targetOffset = animationOffset)
+            enter = slideInHorizontally { -it },
+            exit = slideOutHorizontally { -it }
           ) {
             IconButton(
               modifier = Modifier.padding(all = 16.dp),
@@ -120,11 +130,10 @@ fun TodoListScreenContent(
           }
         },
         actions = {
-          val animationOffset = { size: IntSize -> IntOffset(size.width, 0) }
           AnimatedVisibility(
             visible = state.contentMode !is TodoListScreenMode.Reordering,
-            enter = slideIn(initialOffset = animationOffset),
-            exit = slideOut(targetOffset = animationOffset)
+            enter = slideInHorizontally { it },
+            exit = slideOutHorizontally { it }
           ) {
             IconButton(
               onClick = { onEvent(TodoListScreenEvent.MenuClicked) },
@@ -162,11 +171,10 @@ fun TodoListScreenContent(
       )
     },
     floatingActionButton = {
-      val animationOffset = { size: IntSize -> IntOffset(0, -size.height) }
       AnimatedVisibility(
-        visible = state.contentMode !is TodoListScreenMode.Reordering,
-        enter = slideIn(initialOffset = animationOffset) + scaleIn(),
-        exit = slideOut(targetOffset = animationOffset) + scaleOut()
+        visible = isFabVisible,
+        enter = slideInVertically(initialOffsetY = { it * 2 }),
+        exit = slideOutVertically(targetOffsetY = { it * 2 })
       ) {
         FloatingActionButton(
           shape = CircleShape,
@@ -288,12 +296,11 @@ private fun ReorderButtons(
   onSaveClicked: () -> Unit,
   onCancelClicked: () -> Unit
 ) {
-  val animationOffset = { size: IntSize -> IntOffset(0, size.height) }
   AnimatedVisibility(
     modifier = modifier,
     visible = isVisible,
-    enter = slideIn(initialOffset = animationOffset),
-    exit = slideOut(targetOffset = animationOffset)
+    enter = slideInVertically { it },
+    exit = slideOutVertically { it }
   ) {
     Row(
       modifier = Modifier.padding(all = 16.dp),

@@ -6,8 +6,10 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -48,8 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todo_list.R
@@ -87,11 +87,10 @@ fun MainScreenContent(
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(containerColor = MaterialTheme.colorScheme.primary),
         navigationIcon = {
-          val animationOffset = { size: IntSize -> IntOffset(-size.width, 0) }
           AnimatedVisibility(
             visible = state.isDeleteMode,
-            enter = slideIn(initialOffset = animationOffset),
-            exit = slideOut(targetOffset = animationOffset)
+            enter = slideInHorizontally { -it },
+            exit = slideOutHorizontally { -it }
           ) {
             IconButton(
               onClick = { onEvent(MainScreenEvent.DeleteModeEnabled(isEnabled = false)) },
@@ -106,11 +105,10 @@ fun MainScreenContent(
           }
         },
         actions = {
-          val animationOffset = { size: IntSize -> IntOffset(size.width, 0) }
           AnimatedVisibility(
             visible = state.isDeleteMode,
-            enter = slideIn(initialOffset = animationOffset),
-            exit = slideOut(targetOffset = animationOffset)
+            enter = slideInHorizontally { it },
+            exit = slideOutHorizontally { it }
           ) {
             IconButton(
               onClick = { onEvent(MainScreenEvent.TodoListsDeleted) },
@@ -127,11 +125,10 @@ fun MainScreenContent(
       )
     },
     floatingActionButton = {
-      val animationOffset = { size: IntSize -> IntOffset(0, size.height * 2) }
       AnimatedVisibility(
         visible = !state.isDeleteMode,
-        enter = slideIn(initialOffset = animationOffset),
-        exit = slideOut(targetOffset = animationOffset)
+        enter = slideInVertically { it * 2 },
+        exit = slideOutVertically { it * 2 }
       ) {
         FloatingActionButton(
           shape = CircleShape,
